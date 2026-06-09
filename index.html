@@ -69,7 +69,54 @@
         </div>
       </div>
     </section>
+    <section class="section light">
+      <div class="container">
+        <h2>Micolpe Desktop</h2>
+        <p class="section-intro">
+          Gérez votre colonie, vos pedigrees et vos performances depuis votre ordinateur.
+        </p>
 
+        <div class="micolpe-slider" data-slider>
+          <button class="slider-arrow prev" type="button">‹</button>
+
+          <div class="slider-track">
+            <img class="active" src="assets/img/screenshots/desktop-1.jpg" alt="Micolpe Desktop">
+            <img src="assets/img/screenshots/desktop-2.jpg" alt="Micolpe Desktop">
+            <img src="assets/img/screenshots/desktop-3.jpg" alt="Micolpe Desktop">
+            <img src="assets/img/screenshots/desktop-4.jpg" alt="Micolpe Desktop">
+          </div>
+
+          <button class="slider-arrow next" type="button">›</button>
+
+          <div class="slider-dots"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Micolpe Mobile</h2>
+        <p class="section-intro">
+          Emportez votre colombier partout avec vous grâce à l’application Android.
+        </p>
+
+        <div class="micolpe-slider mobile-showcase" data-slider>
+          <button class="slider-arrow prev" type="button">‹</button>
+
+          <div class="slider-track">
+            <img class="active" src="assets/img/screenshots/mobile-dashboard.jpg" alt="Micolpe Mobile">
+            <img src="assets/img/screenshots/mobile-pigeons.jpg" alt="Micolpe Mobile">
+            <img src="assets/img/screenshots/mobile-pedigree.jpg" alt="Micolpe Mobile">
+            <img src="assets/img/screenshots/mobile-profile.jpg" alt="Micolpe Mobile">
+            <img src="assets/img/screenshots/mobile-distance.jpg" alt="Micolpe Mobile">
+          </div>
+
+          <button class="slider-arrow next" type="button">›</button>
+
+          <div class="slider-dots"></div>
+        </div>
+      </div>
+    </section>
     <section class="section poster-section">
       <div class="container poster-grid">
         <div>
@@ -134,5 +181,71 @@
   <footer class="footer">
     <div class="container footer-grid"><div>© 2026 Micolpe - Tous droits réservés</div><div>contact@micolpe.com · support@micolpe.com</div></div>
   </footer>
+
+  <script>
+    document.querySelectorAll('[data-slider]').forEach((slider) => {
+        const images = slider.querySelectorAll('.slider-track img');
+        const prev = slider.querySelector('.prev');
+        const next = slider.querySelector('.next');
+        const dotsBox = slider.querySelector('.slider-dots');
+
+        let index = 0;
+        let timer;
+
+        images.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.type = 'button';
+            if (i === 0) dot.classList.add('active');
+
+            dot.addEventListener('click', () => {
+                showSlide(i);
+                restartAutoPlay();
+            });
+
+            dotsBox.appendChild(dot);
+        });
+
+        const dots = dotsBox.querySelectorAll('button');
+
+        function showSlide(i) {
+            images[index].classList.remove('active');
+            dots[index].classList.remove('active');
+
+            index = (i + images.length) % images.length;
+
+            images[index].classList.add('active');
+            dots[index].classList.add('active');
+        }
+
+        function nextSlide() {
+            showSlide(index + 1);
+        }
+
+        function prevSlide() {
+            showSlide(index - 1);
+        }
+
+        function startAutoPlay() {
+            timer = setInterval(nextSlide, 4000);
+        }
+
+        function restartAutoPlay() {
+            clearInterval(timer);
+            startAutoPlay();
+        }
+
+        next.addEventListener('click', () => {
+            nextSlide();
+            restartAutoPlay();
+        });
+
+        prev.addEventListener('click', () => {
+            prevSlide();
+            restartAutoPlay();
+        });
+
+        startAutoPlay();
+    });
+  </script>
 </body>
 </html>
