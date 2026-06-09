@@ -5,11 +5,7 @@ max-width: 700px;
 margin: 0 auto;
 display: flex;
 flex-direction: column;
-gap: 12px;
-}
-
-.contact-form label{
-font-weight: 600;
+gap: 4px;
 }
 
 .contact-form input,
@@ -42,4 +38,9 @@ align-self: flex-start;
 
 .contact-form button {
     width: auto !important;
+}
+
+.contact-form label{
+    font-weight: 600;
+    margin: 4px 0 2px 0;
 }
