@@ -58,3 +58,30 @@ align-self: flex-start;
 .download-info p{
     color:var(--muted);
 }
+
+.download-grid{
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+.download-card{
+    flex: 1;
+    min-width: 280px;
+    max-width: 450px;
+
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 24px;
+
+    box-shadow: var(--shadow);
+}
+
+@media(max-width:768px){
+    .download-grid{
+        grid-template-columns: 1fr;
+    }
+}
