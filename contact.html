@@ -1,1 +1,83 @@
-<!doctype html><html><body><h1>Contact Micolpe</h1><p>Version mise à jour.</p></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contact Micolpe</title>
+  <meta name="description" content="Contacter l'équipe Micolpe.">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="assets/img/logo.png">
+</head>
+
+<body>
+<header class="topbar">
+  <div class="container nav">
+    <a class="brand" href="index.html">
+      <img src="assets/img/logo.png" alt="Logo Micolpe">
+      <span>Micolpe</span>
+    </a>
+
+    <nav class="links">
+      <a href="index.html">Accueil</a>
+      <a href="download.html">Télécharger</a>
+      <a href="guide.html">Guide</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head">
+    <div class="container">
+      <h1>Contact</h1>
+      <p class="lead">
+        Une question, une suggestion ou besoin d’aide ? Contactez-nous.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+
+      <form class="contact-form"
+            name="contact"
+            method="POST"
+            data-netlify="true">
+
+        <input type="hidden" name="form-name" value="contact">
+
+        <label for="name">Nom</label>
+        <input id="name" name="name" type="text" required>
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required>
+
+        <label for="subject">Sujet</label>
+        <input id="subject" name="subject" type="text">
+
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="6" required></textarea>
+
+        <button class="btn primary" type="submit">
+          Envoyer
+        </button>
+
+        <p class="muted">
+          Email : contact@micolpe.com<br>
+          Support : support@micolpe.com
+        </p>
+
+      </form>
+
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div>© 2026 Micolpe</div>
+    <div>contact@micolpe.com</div>
+  </div>
+</footer>
+</body>
+</html>
