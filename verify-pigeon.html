@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Vérification pigeon - Micolpe</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, #eef2ff 0, #f8fafc 45%, #e5e7eb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      color: #1f2937;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 430px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 24px;
+      padding: 26px 22px;
+      text-align: center;
+      box-shadow: 0 18px 45px rgba(15,23,42,0.14);
+      border: 1px solid rgba(255,255,255,0.9);
+    }
+
+    .logo {
+      width: 86px;
+      height: 86px;
+      object-fit: contain;
+      margin-bottom: 12px;
+      border-radius: 20px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .badge.ok {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .badge.bad {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 6px 0 10px;
+      line-height: 1.25;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #4b5563;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .ring-box {
+      background: #f8fafc;
+      border: 1px dashed #94a3b8;
+      border-radius: 18px;
+      padding: 16px 12px;
+      margin: 18px 0;
+    }
+
+    .ring-label {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .ring {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111827;
+      word-break: break-word;
+    }
+
+    .info {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #374151;
+    }
+
+    .footer {
+      margin-top: 24px;
+      padding-top: 14px;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .loading {
+      color: #4f46e5;
+      font-weight: 700;
+    }
+
+    @media (max-width: 420px) {
+      body {
+        align-items: flex-start;
+        padding: 18px 14px;
+      }
+
+      .card {
+        margin-top: 18px;
+        border-radius: 22px;
+        padding: 24px 18px;
+      }
+
+      .logo {
+        width: 76px;
+        height: 76px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .ring {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="card">
+    <img src="/assets/img/logo.png" class="logo" alt="Micolpe Logo">
+
+    <div id="badge" class="badge loading">Vérification</div>
+
+    <h1 id="title">Contrôle du QRCode</h1>
+
+    <div id="content" class="subtitle">
+      Vérification du pigeon dans le Cloud Micolpe...
+    </div>
+
+    <div class="footer">
+      Pedigree généré depuis l'application Micolpe<br>
+      Micolpe © <span id="year"></span>
+    </div>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://clppvbtopobtpvtonjin.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNscHB2YnRvcG9idHB2dG9uamluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExOTY5NzMsImV4cCI6MjA2Njc3Mjk3M30.3P-LTxhiNsPRHqkc5kx-cwB_8oy1_o2krXX68O8RkeI";
+
+    const supabase = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    function setState(type, titleText, html) {
+      const badge = document.getElementById("badge");
+      const title = document.getElementById("title");
+      const content = document.getElementById("content");
+
+      badge.className = "badge " + type;
+      badge.textContent = type === "ok" ? "Vérifié" : "Non vérifié";
+
+      title.textContent = titleText;
+      content.innerHTML = html;
+    }
+
+    async function verify() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+
+      if (!code) {
+        setState(
+          "bad",
+          "Code invalide",
+          "Aucun code de vérification n'a été fourni."
+        );
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("pigeon_verification")
+        .select(`
+          verification_token,
+          pigeon:pigeon_id (
+            ring
+          )
+        `)
+        .eq("verification_token", code)
+        .maybeSingle();
+
+      if (error || !data || !data.pigeon) {
+        setState(
+          "bad",
+          "Pigeon non vérifié",
+          "Ce QRCode n'est pas reconnu par Micolpe ou le pigeon n'existe plus dans le Cloud."
+        );
+        return;
+      }
+
+      const ring = data.pigeon.ring || "Bague non disponible";
+
+      setState(
+        "ok",
+        "Pigeon vérifié ✅",
+        `
+          <div class="info">Ce pigeon existe dans le Cloud Micolpe.</div>
+          <div class="ring-box">
+            <div class="ring-label">Bague</div>
+            <div class="ring">${ring}</div>
+          </div>
+          <div class="info">Ce pedigree a été généré depuis l'application officielle Micolpe.</div>
+        `
+      );
+    }
+
+    verify();
+  </script>
+</body>
+</html>
