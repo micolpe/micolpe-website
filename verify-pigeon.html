@@ -166,42 +166,40 @@
   </main>
 
   <script>
-    const SUPABASE_URL = "https://clppvbtopobtpvtonjin.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNscHB2YnRvcG9idHB2dG9uamluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExOTY5NzMsImV4cCI6MjA2Njc3Mjk3M30.3P-LTxhiNsPRHqkc5kx-cwB_8oy1_o2krXX68O8RkeI";
+  const SUPABASE_URL = "https://clppvbtopobtpvtonjin.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNscHB2YnRvcG9idHB2dG9uamluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExOTY5NzMsImV4cCI6MjA2Njc3Mjk3M30.3P-LTxhiNsPRHqkc5kx-cwB_8oy1_o2krXX68O8RkeI";
 
-    const supabase = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
-    );
+  document.getElementById("year").textContent = new Date().getFullYear();
 
-    document.getElementById("year").textContent = new Date().getFullYear();
+  function setState(type, titleText, html) {
+    const badge = document.getElementById("badge");
+    const title = document.getElementById("title");
+    const content = document.getElementById("content");
 
-    function setState(type, titleText, html) {
-      const badge = document.getElementById("badge");
-      const title = document.getElementById("title");
-      const content = document.getElementById("content");
+    badge.className = "badge " + type;
+    badge.textContent = type === "ok" ? "Vérifié" : "Non vérifié";
+    title.textContent = titleText;
+    content.innerHTML = html;
+  }
 
-      badge.className = "badge " + type;
-      badge.textContent = type === "ok" ? "Vérifié" : "Non vérifié";
+  async function verify() {
+    try {
+      if (!window.supabase) {
+        setState("bad", "Erreur de chargement", "Supabase n'a pas été chargé.");
+        return;
+      }
 
-      title.textContent = titleText;
-      content.innerHTML = html;
-    }
+      const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async function verify() {
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
 
       if (!code) {
-        setState(
-          "bad",
-          "Code invalide",
-          "Aucun code de vérification n'a été fourni."
-        );
+        setState("bad", "Code invalide", "Aucun code de vérification fourni.");
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("pigeon_verification")
         .select(`
           verification_token,
@@ -212,11 +210,17 @@
         .eq("verification_token", code)
         .maybeSingle();
 
-      if (error || !data || !data.pigeon) {
+      if (error) {
+        console.error(error);
+        setState("bad", "Erreur de vérification", error.message);
+        return;
+      }
+
+      if (!data || !data.pigeon) {
         setState(
           "bad",
           "Pigeon non vérifié",
-          "Ce QRCode n'est pas reconnu par Micolpe ou le pigeon n'existe plus dans le Cloud."
+          "Ce QRCode n'est pas reconnu ou le pigeon n'existe plus dans le Cloud."
         );
         return;
       }
@@ -232,12 +236,16 @@
             <div class="ring-label">Bague</div>
             <div class="ring">${ring}</div>
           </div>
-          <div class="info">Ce pedigree a été généré depuis l'application officielle Micolpe.</div>
+          <div class="info">Pedigree généré depuis l'application officielle Micolpe.</div>
         `
       );
+    } catch (e) {
+      console.error(e);
+      setState("bad", "Erreur technique", e.message || "Erreur inconnue.");
     }
+  }
 
-    verify();
-  </script>
+  window.addEventListener("load", verify);
+</script>
 </body>
 </html>
