@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="strict-origin-when-cross-origin"><meta http-equiv="Cache-Control" content="no-store">
+  <title>Email confirmation – Micolpe</title><meta name="description" content="Confirm your email address to complete your Micolpe account.">
+  <link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/portal.css"><link rel="icon" href="../assets/img/logo.png">
+</head>
+<body>
+  <header class="topbar account-topbar"><div class="container nav"><a class="brand" href="index.html"><img src="../assets/img/logo.png" alt="Micolpe logo"><span>Micolpe</span></a><nav class="account-nav" aria-label="Account navigation"><a href="index.html">Back to website</a><a class="btn secondary small" href="login.html">Sign in</a></nav></div></header>
+  <main class="account-main"><div class="auth-layout">
+    <section class="auth-story" aria-label="Micolpe"><span class="badge">One last step</span><h1>Your account<span>is almost ready</span></h1><p>Confirmation protects your account and lets you access the same data on all your Micolpe devices.</p></section>
+    <section class="auth-panel" aria-labelledby="confirmation-title">
+      <div class="confirmation-mark" aria-hidden="true">✓</div><h1 id="confirmation-title">Confirm your email</h1><p>We sent a link to your email address. Click it to finish creating your account.</p>
+      <div class="confirmation-steps"><ol><li>Open the message sent by Micolpe.</li><li>Click the confirmation link.</li><li>Your account will open automatically.</li></ol></div>
+      <div class="auth-status info" id="confirmation-status" role="status" aria-live="polite">Waiting for your confirmation…</div>
+      <div class="button-row" style="margin-top:18px"><button class="btn primary" id="check-confirmation" type="button">Check now</button><a class="btn secondary" href="login.html">Back to sign in</a></div>
+      <form class="auth-form" id="resend-form" style="margin-top:26px" novalidate><div class="form-field"><label for="confirmation-email">Didn’t receive anything?</label><input id="confirmation-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required></div><button class="btn ghost auth-submit" id="resend-submit" type="submit">Resend link</button></form>
+    </section>
+  </div></main>
+  <script src="../assets/js/supabase-config.js"></script><script type="module" src="../assets/js/confirm-email.js"></script>
+</body>
+</html>

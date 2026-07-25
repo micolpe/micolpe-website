@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <title>Connexion à votre espace – Micolpe</title>
+  <meta name="description" content="Connectez-vous à votre espace Micolpe pour consulter votre profil, votre loft, vos appareils et vos pigeons.">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/portal.css">
+  <link rel="icon" href="assets/img/logo.png">
+</head>
+<body>
+  <header class="topbar account-topbar">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <img src="assets/img/logo.png" alt="Logo Micolpe">
+        <span>Micolpe</span>
+      </a>
+      <nav class="account-nav" aria-label="Navigation du compte">
+        <a href="index.html">Retour au site</a>
+        <a class="btn secondary small" href="register.html">Créer un compte</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="account-main">
+    <div class="auth-layout">
+      <section class="auth-story" aria-label="L’univers Micolpe">
+        <span class="badge">Espace membre Micolpe</span>
+        <h1>Votre loft,<span>partout avec vous</span></h1>
+        <p>Retrouvez les données essentielles de votre compte Micolpe depuis votre navigateur.</p>
+      </section>
+
+      <section class="auth-panel" aria-labelledby="login-title">
+        <h1 id="login-title">Bon retour</h1>
+        <p>Connectez-vous avec le même compte que dans l’application Micolpe.</p>
+
+        <form class="auth-form" id="login-form" novalidate>
+          <div class="form-field">
+            <label for="email">Adresse e-mail</label>
+            <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required>
+          </div>
+
+          <div class="form-field">
+            <label for="password">Mot de passe</label>
+            <div class="password-field">
+              <input id="password" name="password" type="password" autocomplete="current-password" required>
+              <button class="password-toggle" id="toggle-password" type="button" aria-pressed="false">Afficher</button>
+            </div>
+          </div>
+
+          <div class="auth-status info" id="login-status" role="status" aria-live="polite" hidden></div>
+
+          <button class="btn primary auth-submit" id="login-submit" type="submit">
+            <span class="button-label">Se connecter</span>
+          </button>
+        </form>
+
+        <p class="auth-switch">Pas encore de compte ? <a href="register.html">Profiter de 15 jours d’essai</a></p>
+      </section>
+    </div>
+  </main>
+
+  <script src="assets/js/supabase-config.js"></script>
+  <script type="module" src="assets/js/login.js"></script>
+</body>
+</html>

@@ -160,6 +160,7 @@
     </div>
 
     <div class="footer">
+      Pedigree généré depuis l'application Micolpe<br>
       Micolpe © <span id="year"></span>
     </div>
   </main>
@@ -240,7 +241,7 @@
       );
     } catch (e) {
       console.error(e);
-      setState("bad", "Erreur technique", e.message || "Erreur inconnue.");
+      setState("bad", "Vérification indisponible", "Veuillez réessayer dans quelques instants.");
     }
   }
 

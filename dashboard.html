@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <title>Mon espace – Micolpe</title>
+  <meta name="description" content="Espace privé Micolpe de consultation du profil, du loft, des appareils et des pigeons.">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/portal.css">
+  <link rel="icon" href="assets/img/logo.png">
+</head>
+<body class="portal-body">
+  <div class="portal-shell">
+    <aside class="portal-sidebar">
+      <a class="portal-brand" href="index.html" aria-label="Revenir au site Micolpe">
+        <img src="assets/img/logo.png" alt="">
+        <span>Micolpe</span>
+      </a>
+
+      <div class="portal-member">
+        <small>Compte connecté</small>
+        <strong id="sidebar-member-name">Membre Micolpe</strong>
+        <span id="sidebar-member-email">Chargement…</span>
+      </div>
+
+      <nav class="portal-nav" aria-label="Sections de l’espace membre">
+        <button class="active" type="button" data-section-target="overview">Vue d’ensemble</button>
+        <button type="button" data-section-target="profile">Mon profil</button>
+        <button type="button" data-section-target="loft">Mon loft</button>
+        <button type="button" data-section-target="devices">Mes appareils</button>
+        <button type="button" data-section-target="pigeons">Mes pigeons</button>
+      </nav>
+
+      <div class="portal-sidebar-footer">
+        Espace personnel Micolpe
+      </div>
+    </aside>
+
+    <main class="portal-content">
+      <header class="portal-topbar">
+        <div>
+          <h1 id="portal-greeting">Bienvenue</h1>
+          <p>Consultez les informations synchronisées avec votre compte Micolpe.</p>
+        </div>
+        <button class="btn secondary logout-button" id="logout-button" type="button">Se déconnecter</button>
+      </header>
+
+      <div class="portal-loading" id="portal-loading" role="status" aria-live="polite">
+        <div class="loading-card">
+          <div class="loading-spinner" aria-hidden="true"></div>
+          <strong>Préparation de votre espace</strong>
+          <p>Chargement de vos données Micolpe…</p>
+        </div>
+      </div>
+
+      <div class="portal-error" id="portal-error" hidden>
+        <div class="error-card">
+          <h2>Impossible de charger votre espace</h2>
+          <p id="portal-error-message">Une erreur temporaire est survenue.</p>
+          <button class="btn primary" id="retry-button" type="button">Réessayer</button>
+        </div>
+      </div>
+
+      <div id="portal-sections" hidden>
+        <section class="portal-section" id="section-overview" data-portal-section="overview">
+          <div class="section-heading">
+            <div>
+              <h2>Vue d’ensemble</h2>
+              <p>Les informations essentielles de votre compte.</p>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <article class="summary-card">
+              <span class="eyebrow">Abonnement</span>
+              <strong id="summary-subscription">—</strong>
+              <small id="summary-subscription-detail">Chargement…</small>
+            </article>
+            <article class="summary-card">
+              <span class="eyebrow">Loft</span>
+              <strong id="summary-loft">—</strong>
+              <small id="summary-loft-detail">Chargement…</small>
+            </article>
+            <article class="summary-card">
+              <span class="eyebrow">Appareils actifs</span>
+              <strong id="summary-devices">—</strong>
+              <small id="summary-devices-detail">Chargement…</small>
+            </article>
+            <article class="summary-card">
+              <span class="eyebrow">Pigeons</span>
+              <strong id="summary-pigeons">—</strong>
+              <small id="summary-pigeons-detail">Chargement…</small>
+            </article>
+          </div>
+
+          <div class="portal-card-grid">
+            <article class="portal-card">
+              <h3>Votre compte Micolpe</h3>
+              <dl class="data-list">
+                <div><dt>Nom</dt><dd id="overview-name">—</dd></div>
+                <div><dt>E-mail</dt><dd id="overview-email">—</dd></div>
+                <div><dt>État du compte</dt><dd id="overview-status">—</dd></div>
+                <div><dt>Dernière connexion</dt><dd id="overview-last-login">—</dd></div>
+              </dl>
+            </article>
+
+            <article class="portal-card">
+              <h3>Vos données Micolpe</h3>
+              <p>Consultez ici les données synchronisées avec votre compte Micolpe.</p>
+              <div class="portal-note download-note">
+                <span>Pour ajouter ou modifier vos données, utilisez l’application Micolpe sur Android ou Windows.</span>
+                <a class="btn primary small" href="download.html">Télécharger l’application</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="portal-section" id="section-profile" data-portal-section="profile" hidden>
+          <div class="section-heading">
+            <div>
+              <h2>Mon profil</h2>
+              <p>Informations du titulaire et état de l’abonnement.</p>
+            </div>
+            <div class="future-actions">
+              <button class="btn secondary future-action" type="button" disabled title="Disponible prochainement">
+                Modifier le profil <span class="soon-chip">Bientôt</span>
+              </button>
+              <button class="btn secondary future-action" type="button" disabled title="Disponible prochainement">
+                Modifier le mot de passe <span class="soon-chip">Bientôt</span>
+              </button>
+            </div>
+          </div>
+
+          <article class="portal-card">
+            <dl class="data-list">
+              <div><dt>Nom complet</dt><dd id="profile-name">—</dd></div>
+              <div><dt>Adresse e-mail</dt><dd id="profile-email">—</dd></div>
+              <div><dt>Téléphone</dt><dd id="profile-phone">—</dd></div>
+              <div><dt>Type d’abonnement</dt><dd id="profile-subscription-type">—</dd></div>
+              <div><dt>Début de l’abonnement</dt><dd id="profile-subscription-start">—</dd></div>
+              <div><dt>Fin de l’abonnement</dt><dd id="profile-subscription-end">—</dd></div>
+              <div><dt>Compte créé le</dt><dd id="profile-created-at">—</dd></div>
+              <div><dt>Dernière connexion</dt><dd id="profile-last-login">—</dd></div>
+            </dl>
+          </article>
+        </section>
+
+        <section class="portal-section" id="section-loft" data-portal-section="loft" hidden>
+          <div class="section-heading">
+            <div>
+              <h2>Mon loft</h2>
+              <p>Coordonnées enregistrées dans votre application Micolpe.</p>
+            </div>
+            <div class="future-actions">
+              <button class="btn secondary future-action" type="button" disabled title="Disponible prochainement">
+                Modifier le loft <span class="soon-chip">Bientôt</span>
+              </button>
+            </div>
+          </div>
+
+          <article class="portal-card" id="loft-card">
+            <dl class="data-list">
+              <div><dt>Nom du loft</dt><dd id="loft-name">—</dd></div>
+              <div><dt>Adresse</dt><dd id="loft-address">—</dd></div>
+              <div><dt>Téléphone</dt><dd id="loft-phone">—</dd></div>
+              <div><dt>E-mail</dt><dd id="loft-email">—</dd></div>
+              <div><dt>Site Web</dt><dd id="loft-website">—</dd></div>
+              <div><dt>Réseaux sociaux</dt><dd id="loft-social">—</dd></div>
+              <div><dt>Coordonnées GPS</dt><dd id="loft-location">—</dd></div>
+              <div><dt>Langue</dt><dd id="loft-language">—</dd></div>
+            </dl>
+          </article>
+        </section>
+
+        <section class="portal-section" id="section-devices" data-portal-section="devices" hidden>
+          <div class="section-heading">
+            <div>
+              <h2>Mes appareils</h2>
+              <p>Appareils Android et Windows déjà enregistrés par Micolpe.</p>
+            </div>
+            <div class="future-actions">
+              <button class="btn secondary future-action" type="button" disabled title="Disponible prochainement">
+                Gérer les appareils <span class="soon-chip">Bientôt</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="portal-note">La connexion depuis ce site ne crée pas un nouvel appareil mobile ou desktop dans votre compte.</div>
+
+          <article class="portal-card">
+            <div class="table-wrap">
+              <table class="portal-table">
+                <thead>
+                  <tr>
+                    <th>Appareil</th>
+                    <th>Type</th>
+                    <th>Dernière activité</th>
+                    <th>État</th>
+                  </tr>
+                </thead>
+                <tbody id="devices-table-body"></tbody>
+              </table>
+              <div class="empty-state" id="devices-empty" hidden>Aucun appareil enregistré.</div>
+            </div>
+          </article>
+        </section>
+
+        <section class="portal-section" id="section-pigeons" data-portal-section="pigeons" hidden>
+          <div class="section-heading">
+            <div>
+              <h2>Mes pigeons</h2>
+              <p>Consultez votre colonie et recherchez rapidement une bague.</p>
+            </div>
+            <div class="future-actions">
+              <button class="btn primary future-action" type="button" disabled title="Disponible prochainement">
+                Ajouter un pigeon <span class="soon-chip">Bientôt</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="pigeon-filters">
+            <label class="form-field">
+              <span>Bague</span>
+              <input id="pigeon-ring-search" type="search" placeholder="Rechercher une bague">
+            </label>
+            <label class="form-field">
+              <span>Nom</span>
+              <input id="pigeon-name-search" type="search" placeholder="Rechercher un nom">
+            </label>
+            <label class="form-field">
+              <span>Père</span>
+              <input id="pigeon-father-search" type="search" placeholder="Bague du père">
+            </label>
+            <label class="form-field">
+              <span>Mère</span>
+              <input id="pigeon-mother-search" type="search" placeholder="Bague de la mère">
+            </label>
+            <label class="form-field">
+              <span>État</span>
+              <select id="pigeon-state-filter">
+                <option value="">Tous les états</option>
+                <option value="actif">Actif</option>
+                <option value="breeder">Reproducteur</option>
+                <option value="lost">Perdu</option>
+                <option value="sold">Vendu</option>
+                <option value="lent">Prêté</option>
+                <option value="dead">Décédé</option>
+                <option value="pedigree">Pedigree</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span>Sexe</span>
+              <select id="pigeon-gender-filter">
+                <option value="">Tous</option>
+                <option value="♂">♂ Mâle</option>
+                <option value="♀">♀ Femelle</option>
+              </select>
+            </label>
+          </div>
+
+          <article class="portal-card">
+            <div class="table-wrap">
+              <table class="portal-table">
+                <thead>
+                  <tr>
+                    <th>Bague</th>
+                    <th>Nom</th>
+                    <th>Père</th>
+                    <th>Mère</th>
+                    <th>État</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="pigeons-table-body"></tbody>
+              </table>
+              <div class="empty-state" id="pigeons-empty" hidden>Aucun pigeon ne correspond à votre recherche.</div>
+            </div>
+          </article>
+
+          <div class="pagination">
+            <span id="pigeon-pagination-label">0 pigeon</span>
+            <div class="pagination-actions">
+              <button class="btn secondary" id="pigeon-previous" type="button">Précédent</button>
+              <button class="btn secondary" id="pigeon-next" type="button">Suivant</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="pedigree-modal" id="pedigree-modal" hidden>
+    <div class="pedigree-modal-backdrop" data-close-pedigree></div>
+    <section class="pedigree-dialog" role="dialog" aria-modal="true" aria-labelledby="pedigree-modal-title">
+      <header class="pedigree-dialog-header">
+        <div>
+          <span class="eyebrow">Pedigree</span>
+          <h2 id="pedigree-modal-title">Pedigree</h2>
+        </div>
+        <div class="pedigree-dialog-actions">
+          <button class="btn primary small" id="pedigree-export-pdf" type="button">Exporter PDF</button>
+          <button class="pedigree-close" type="button" data-close-pedigree aria-label="Fermer la prévisualisation">×</button>
+        </div>
+      </header>
+      <div class="pedigree-loading" id="pedigree-loading">Préparation du pedigree…</div>
+      <div class="pedigree-error" id="pedigree-error" hidden></div>
+      <div class="pedigree-preview-wrap" id="pedigree-preview-wrap" hidden>
+        <article class="pedigree-sheet" id="pedigree-sheet">
+          <header class="pedigree-sheet-header">
+            <div class="pedigree-loft-heading">
+              <img id="pedigree-loft-logo" class="pedigree-loft-logo" alt="" hidden>
+              <div>
+                <strong id="pedigree-loft-name">Micolpe</strong>
+                <span id="pedigree-loft-contact"></span>
+              </div>
+            </div>
+            <div class="pedigree-sheet-title">
+              <span id="pedigree-sheet-heading">Pedigree</span>
+              <strong id="pedigree-root-ring"></strong>
+            </div>
+          </header>
+          <div class="pedigree-generations" id="pedigree-generations"></div>
+          <footer class="pedigree-sheet-footer">
+            <span id="pedigree-footer-date"></span>
+            <span id="pedigree-footer-brand">Micolpe Web</span>
+            <div id="pedigree-footer-qr" class="pedigree-footer-qr" aria-label="QR code de vérification"></div>
+          </footer>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
+  <script type="module" src="assets/js/portal.js"></script>
+</body>
+</html>
