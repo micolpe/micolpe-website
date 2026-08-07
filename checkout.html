@@ -44,7 +44,7 @@
       if (PADDLE_ENV === "sandbox") Paddle.Environment.set("sandbox");
       Paddle.Initialize({
         token: PADDLE_CLIENT_TOKEN,
-        checkout: { settings: { displayMode: "overlay", theme: "light", locale: "fr", showAddDiscounts: true, showAddTaxId: true, allowLogout: true } },
+        checkout: { settings: { displayMode: "overlay", theme: "light", locale: "fr", showAddDiscounts: true, showAddTaxId: true, allowLogout: false } },
         eventCallback: function (event) {
           switch (event.name) {
             case "checkout.loaded": spinner.style.display = "none"; message.textContent = "Finalisez votre paiement dans la fenêtre sécurisée."; break;
