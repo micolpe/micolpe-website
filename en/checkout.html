@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Secure checkout | Micolpe</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="icon" href="../assets/img/logo.png">
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="container nav"><a class="brand" href="index.html"><img src="../assets/img/logo.png" alt="Micolpe logo"><span>Micolpe</span></a><nav class="links" aria-label="Main navigation"><a href="pricing.html">Pricing</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refund.html">Refunds</a><a href="../checkout.html" id="language-link">FR</a></nav><a class="btn primary small" href="login.html">My account</a></div></header>
+<main class="checkout-page"><div class="container checkout-layout">
+  <aside class="checkout-aside"><span class="badge">Micolpe payment</span><h1>Simple, clear and secure.</h1><p>The final summary, applicable taxes and payment method are shown in the Paddle window before you confirm.</p><div class="trust-list"><span>✓ Payment processed by Paddle</span><span>✓ Activation after webhook confirmation</span><span>✓ No card number stored by Micolpe</span><span>✓ Support: support@micolpe.com</span></div></aside>
+  <section class="checkout-card" aria-live="polite"><img class="checkout-logo" src="../assets/img/logo.png" alt="Micolpe"><h2>Secure Micolpe checkout</h2><p id="message">Preparing your secure checkout…</p><div id="spinner" class="checkout-spinner" role="status" aria-label="Loading"></div><div id="success" class="checkout-state success"><strong>Payment confirmed.</strong><br>Your purchase is being activated on your Micolpe account.<div class="checkout-actions"><a class="btn primary small" href="dashboard.html">Open my account</a></div></div><div id="notice" class="checkout-state notice"></div><div id="error" class="checkout-state error"></div><div class="checkout-legal">By continuing, you agree to the <a href="terms.html">Terms and Conditions</a>. See also the <a href="privacy.html">Privacy Policy</a> and <a href="refund.html">Refund Policy</a>. Paddle acts as Merchant of Record for this transaction.</div></section>
+</div></main>
+<script>
+  const PADDLE_ENV = "sandbox";
+  const PADDLE_CLIENT_TOKEN = "test_ba6bf8c013611da3098bfcea751";
+  const params = new URLSearchParams(window.location.search);
+  const transactionId = params.get("transaction_id");
+  const spinner = document.getElementById("spinner");
+  const message = document.getElementById("message");
+  const successBox = document.getElementById("success");
+  const noticeBox = document.getElementById("notice");
+  const errorBox = document.getElementById("error");
+  const languageLink = document.getElementById("language-link");
+  let paymentCompleted = false;
+
+  if (transactionId) languageLink.href = "../checkout.html?transaction_id=" + encodeURIComponent(transactionId);
+
+  function hideStates() { successBox.style.display = "none"; noticeBox.style.display = "none"; errorBox.style.display = "none"; }
+  function showError(text) { spinner.style.display = "none"; hideStates(); errorBox.textContent = text; errorBox.style.display = "block"; message.textContent = "Checkout could not be prepared."; }
+  function showNotice(text) { spinner.style.display = "none"; hideStates(); noticeBox.textContent = text; noticeBox.style.display = "block"; message.textContent = "Checkout interrupted"; }
+  function showSuccess() { paymentCompleted = true; spinner.style.display = "none"; hideStates(); successBox.style.display = "block"; message.textContent = "Thank you!"; }
+
+  try {
+    if (!/^txn_[a-z0-9]{26}$/.test(transactionId || "")) {
+      showError("No valid transaction was found. Return to your Micolpe account and start the payment again.");
+    } else if (typeof Paddle === "undefined") {
+      showError("The secure payment service is temporarily unavailable. Please try again.");
+    } else {
+      if (PADDLE_ENV === "sandbox") Paddle.Environment.set("sandbox");
+      Paddle.Initialize({
+        token: PADDLE_CLIENT_TOKEN,
+        checkout: { settings: { displayMode: "overlay", theme: "light", locale: "en", showAddDiscounts: true, showAddTaxId: true, allowLogout: true } },
+        eventCallback: function (event) {
+          switch (event.name) {
+            case "checkout.loaded": spinner.style.display = "none"; message.textContent = "Complete your payment in the secure window."; break;
+            case "checkout.completed": showSuccess(); break;
+            case "checkout.closed": if (!paymentCompleted) showNotice("The payment window was closed. No new payment has been confirmed."); break;
+            case "checkout.error": showError("Paddle could not complete this operation. Check the information or try again."); break;
+          }
+        }
+      });
+      Paddle.Checkout.open({ transactionId: transactionId });
+    }
+  } catch (error) {
+    console.error("Paddle initialization error");
+    showError("Unable to load secure checkout. Please try again or contact support.");
+  }
+</script>
+</body>
+</html>
