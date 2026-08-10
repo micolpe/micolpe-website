@@ -59,7 +59,7 @@
         <header class="portal-topbar">
           <div>
             <h1 id="portal-greeting">Bienvenue</h1>
-            <p>
+            <p id="portal-intro">
               Consultez les informations synchronisées avec votre compte
               Micolpe.
             </p>
@@ -97,6 +97,20 @@
         </div>
 
         <div id="portal-sections" hidden>
+          <div
+            class="portal-renewal-notice"
+            id="portal-renewal-notice"
+            role="status"
+            hidden
+          >
+            <strong>Votre accès Micolpe est expiré.</strong>
+            <span
+              >Seule la section Paiements reste accessible. Choisissez une durée
+              d’accès pour rouvrir automatiquement toutes les sections après
+              confirmation du paiement.</span
+            >
+          </div>
+
           <section
             class="portal-section"
             id="section-overview"
@@ -257,7 +271,8 @@
               <div>
                 <h2>Paiements</h2>
                 <p>
-                  Consultez votre accès Micolpe et vos générations Poster IA.
+                  Activez ou prolongez Micolpe et rechargez vos crédits Poster
+                  IA.
                 </p>
               </div>
             </div>
@@ -279,9 +294,9 @@
                 >
               </article>
               <article class="payment-account-card">
-                <span class="eyebrow">Générations Poster IA</span>
+                <span class="eyebrow">Crédits Poster IA</span>
                 <strong id="payment-poster-balance">0</strong>
-                <small>Générations disponibles sur votre compte</small>
+                <small>Crédits disponibles sur votre compte</small>
               </article>
             </div>
 
@@ -295,7 +310,7 @@
                   </p>
                 </div>
                 <span class="payment-secure-badge"
-                  >Paiement en ligne en préparation</span
+                  >Paiement sécurisé par Lemon Squeezy</span
                 >
               </div>
               <div class="payment-offer-grid" id="subscription-offers">
@@ -308,11 +323,10 @@
             <article class="portal-card payment-catalog-card">
               <div class="payment-catalog-heading">
                 <div>
-                  <h3>Générations Micolpe Poster Studio</h3>
+                  <h3>Crédits Micolpe Poster Studio</h3>
                   <p>
-                    Chaque génération réussie utilise une unité. Les unités
-                    achetées restent attachées à votre compte et n’ont aucune
-                    valeur monétaire.
+                    Chaque génération réussie consomme un crédit. Les crédits
+                    achetés restent attachés à votre compte.
                   </p>
                 </div>
               </div>
@@ -321,8 +335,8 @@
                 id="poster-payment-trial-note"
                 hidden
               >
-                Les packs Poster Studio deviennent utilisables après
-                l’activation de l’accès Micolpe.
+                Activez d’abord votre abonnement Micolpe pour pouvoir acheter
+                des packs posters.
               </div>
               <div class="payment-offer-grid" id="poster-offers">
                 <div class="payment-catalog-loading">Chargement des packs…</div>
@@ -331,10 +345,10 @@
 
             <div class="portal-note payment-legal-note">
               <span
-                >Le paiement en ligne est temporairement indisponible pendant
-                l’activation de notre solution de paiement sécurisée. Pour une
-                activation ou un renouvellement, contactez
-                <a href="mailto:support@micolpe.com">support@micolpe.com</a>.</span
+                >Le total final, les taxes applicables et le moyen de paiement
+                sont affichés dans le checkout Lemon Squeezy. L’activation
+                intervient uniquement après confirmation sécurisée reçue par le
+                serveur.</span
               >
               <span
                 ><a href="terms.html">Conditions générales</a> ·
@@ -619,7 +633,6 @@
                 <img
                   id="pedigree-loft-logo"
                   class="pedigree-loft-logo"
-                  src="assets/img/logo.png"
                   alt=""
                   hidden
                 />
@@ -640,7 +653,6 @@
               <div
                 id="pedigree-footer-qr"
                 class="pedigree-footer-qr"
-                role="img"
                 aria-label="QR code de vérification"
               ></div>
             </footer>

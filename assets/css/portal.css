@@ -387,10 +387,6 @@
   cursor: pointer;
 }
 
-.portal-nav button[hidden] {
-  display: none;
-}
-
 .portal-nav button:hover,
 .portal-nav button.active {
   border-color: rgba(255, 255, 255, 0.18);
@@ -659,6 +655,31 @@
   background: #f0f5f1;
   border: 1px solid #dce7de;
   font-size: 14px;
+}
+
+.portal-renewal-notice {
+  display: grid;
+  gap: 6px;
+  margin-top: 28px;
+  padding: 18px 20px;
+  border: 1px solid #e2c370;
+  border-radius: 18px;
+  color: #6b4b0e;
+  background: linear-gradient(135deg, #fff7dc, #fffdf5);
+  box-shadow: 0 12px 28px rgba(94, 68, 16, 0.08);
+}
+
+.portal-renewal-notice[hidden] {
+  display: none;
+}
+
+.portal-renewal-notice strong {
+  color: #5f4108;
+  font-size: 17px;
+}
+
+.portal-renewal-only #section-payments {
+  margin-top: 18px;
 }
 
 .download-note {
