@@ -13,7 +13,7 @@ export const AUTH_ERROR = Object.freeze({
 
 const PROFILE_RETRY_DELAYS = [0, 350, 700];
 const PROFILE_AUTH_FIELDS =
-  'id,name,email,phone,is_verified,is_active,is_trial,subscription_type,subscription_start,subscription_end,created_at,last_login';
+  'id,name,email,phone,is_verified,is_active,is_trial,subscription_type,subscription_start,subscription_end,pending_deletion_at,created_at,last_login';
 
 function wait(milliseconds) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
@@ -61,20 +61,36 @@ export function normalizeAuthError(error) {
   return error?.message || AUTH_ERROR.UNKNOWN;
 }
 
-export function checkProfileAccess(profile) {
+export function isSubscriptionExpired(profile, referenceTime = Date.now()) {
+  if (!profile?.subscription_end) return false;
+
+  const endDate = new Date(profile.subscription_end);
+  if (Number.isNaN(endDate.getTime())) return false;
+
+  return Number(referenceTime) >= endDate.getTime();
+}
+
+export function checkProfileAccess(profile, { allowExpired = false } = {}) {
   if (!isTrue(profile?.is_verified)) {
     return AUTH_ERROR.EMAIL_CONFIRMATION_REQUIRED;
+  }
+
+  if (profile?.pending_deletion_at) {
+    return AUTH_ERROR.ACCOUNT_DISABLED;
+  }
+
+  const subscriptionExpired = isSubscriptionExpired(profile);
+
+  if (subscriptionExpired && allowExpired) {
+    return null;
   }
 
   if (!isTrue(profile?.is_active)) {
     return AUTH_ERROR.ACCOUNT_DISABLED;
   }
 
-  if (profile?.subscription_end) {
-    const endDate = new Date(profile.subscription_end);
-    if (!Number.isNaN(endDate.getTime()) && Date.now() > endDate.getTime()) {
-      return AUTH_ERROR.SUBSCRIPTION_EXPIRED;
-    }
+  if (subscriptionExpired) {
+    return AUTH_ERROR.SUBSCRIPTION_EXPIRED;
   }
 
   return null;
@@ -245,15 +261,24 @@ export async function loginWithPassword(email, password) {
       return { success: false, error: AUTH_ERROR.INVALID_CREDENTIALS };
     }
 
-    const profile = await initializeConfirmedAccount(
-      data.user,
-      normalizedEmail,
-    );
-    const accessError = checkProfileAccess(profile);
+    const profile = await loadOrRepairProfile(data.user, normalizedEmail);
+    if (!profile) {
+      throw new Error(AUTH_ERROR.PROFILE_INITIALIZATION_FAILED);
+    }
+    const renewalOnly = isSubscriptionExpired(profile);
+    const accessError = checkProfileAccess(profile, { allowExpired: true });
 
     if (accessError) {
       await supabase.auth.signOut({ scope: 'local' });
       return { success: false, error: accessError };
+    }
+
+    if (!renewalOnly) {
+      try {
+        await ensureDefaultLoft(data.user, profile);
+      } catch {
+        // L'absence temporaire du loft ne doit pas bloquer l'accès au compte.
+      }
     }
 
     const { error: updateError } = await supabase
@@ -270,6 +295,7 @@ export async function loginWithPassword(email, password) {
       session: data.session,
       user: data.user,
       profile,
+      accessMode: renewalOnly ? 'renewal' : 'full',
     };
   } catch (error) {
     return { success: false, error: normalizeAuthError(error) };

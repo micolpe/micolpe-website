@@ -3,63 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Paiement sécurisé | Micolpe</title>
+  <title>Paiement en ligne | Micolpe</title>
+  <meta name="description" content="Informations sur l’activation prochaine du paiement en ligne sécurisé Micolpe.">
   <meta name="robots" content="noindex,nofollow">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="icon" href="assets/img/logo.png">
-  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 </head>
 <body>
-<header class="topbar"><div class="container nav"><a class="brand" href="index.html"><img src="assets/img/logo.png" alt="Logo Micolpe"><span>Micolpe</span></a><nav class="links" aria-label="Navigation principale"><a href="pricing.html">Tarifs</a><a href="terms.html">Conditions</a><a href="privacy.html">Confidentialité</a><a href="refund.html">Remboursements</a><a href="en/checkout.html" id="language-link">EN</a></nav><a class="btn primary small" href="login.html">Mon espace</a></div></header>
+<header class="topbar"><div class="container nav"><a class="brand" href="index.html"><img src="assets/img/logo.png" alt="Logo Micolpe"><span>Micolpe</span></a><nav class="links" aria-label="Navigation principale"><a href="pricing.html">Tarifs</a><a href="terms.html">Conditions</a><a href="privacy.html">Confidentialité</a><a href="refund.html">Remboursements</a><a href="en/checkout.html">EN</a></nav><a class="btn primary small" href="login.html">Mon espace</a></div></header>
 <main class="checkout-page"><div class="container checkout-layout">
-  <aside class="checkout-aside"><span class="badge">Paiement Micolpe</span><h1>Simple, clair et sécurisé.</h1><p>Le récapitulatif final, les taxes applicables et le moyen de paiement sont affichés dans la fenêtre Paddle avant votre confirmation.</p><div class="trust-list"><span>✓ Paiement traité par Paddle</span><span>✓ Activation après confirmation du webhook</span><span>✓ Aucun numéro de carte stocké par Micolpe</span><span>✓ Assistance : support@micolpe.com</span></div></aside>
-  <section class="checkout-card" aria-live="polite"><img class="checkout-logo" src="assets/img/logo.png" alt="Micolpe"><h2>Paiement sécurisé Micolpe</h2><p id="message">Préparation de votre paiement sécurisé…</p><div id="spinner" class="checkout-spinner" role="status" aria-label="Chargement"></div><div id="success" class="checkout-state success"><strong>Paiement confirmé.</strong><br>Votre achat est en cours d’activation sur votre compte Micolpe.<div class="checkout-actions"><a class="btn primary small" href="dashboard.html">Ouvrir mon espace</a></div></div><div id="notice" class="checkout-state notice"></div><div id="error" class="checkout-state error"></div><div class="checkout-legal">En poursuivant, vous acceptez les <a href="terms.html">Conditions générales</a>. Consultez aussi la <a href="privacy.html">Politique de confidentialité</a> et la <a href="refund.html">Politique de remboursement</a>. Paddle agit comme Merchant of Record pour cette transaction.</div></section>
+  <aside class="checkout-aside"><span class="badge">Paiement Micolpe</span><h1>Une solution sécurisée est en préparation.</h1><p>Nous finalisons l’activation de notre solution de paiement en ligne. Aucun paiement par carte ne peut actuellement être lancé depuis cette page.</p><div class="trust-list"><span>✓ Offres et tarifs toujours consultables</span><span>✓ Aucun numéro de carte demandé ou stocké</span><span>✓ Accès et données Micolpe inchangés</span><span>✓ Assistance : support@micolpe.com</span></div></aside>
+  <section class="checkout-card" aria-live="polite"><img class="checkout-logo" src="assets/img/logo.png" alt="Micolpe"><h2>Paiement en ligne temporairement indisponible</h2><p>Pour une activation, un renouvellement ou une question concernant votre compte, contactez notre assistance. Nous vous informerons dès que le paiement sécurisé sera disponible.</p><div class="checkout-actions"><a class="btn primary small" href="pricing.html">Voir les tarifs</a><a class="btn secondary small" href="mailto:support@micolpe.com">Contacter l’assistance</a><a class="btn secondary small" href="login.html">Mon espace</a></div><div class="checkout-legal">Consultez les <a href="terms.html">Conditions générales</a>, la <a href="privacy.html">Politique de confidentialité</a> et la <a href="refund.html">Politique de remboursement</a>.</div></section>
 </div></main>
-<script>
-  const PADDLE_ENV = "sandbox";
-  const PADDLE_CLIENT_TOKEN = "test_ba6bf8c013611da3098bfcea751";
-  const params = new URLSearchParams(window.location.search);
-  const transactionId = params.get("transaction_id");
-  const spinner = document.getElementById("spinner");
-  const message = document.getElementById("message");
-  const successBox = document.getElementById("success");
-  const noticeBox = document.getElementById("notice");
-  const errorBox = document.getElementById("error");
-  const languageLink = document.getElementById("language-link");
-  let paymentCompleted = false;
-
-  if (transactionId) languageLink.href = "en/checkout.html?transaction_id=" + encodeURIComponent(transactionId);
-
-  function hideStates() { successBox.style.display = "none"; noticeBox.style.display = "none"; errorBox.style.display = "none"; }
-  function showError(text) { spinner.style.display = "none"; hideStates(); errorBox.textContent = text; errorBox.style.display = "block"; message.textContent = "Le paiement n’a pas pu être préparé."; }
-  function showNotice(text) { spinner.style.display = "none"; hideStates(); noticeBox.textContent = text; noticeBox.style.display = "block"; message.textContent = "Paiement interrompu"; }
-  function showSuccess() { paymentCompleted = true; spinner.style.display = "none"; hideStates(); successBox.style.display = "block"; message.textContent = "Merci !"; }
-
-  try {
-    if (!/^txn_[a-z0-9]{26}$/.test(transactionId || "")) {
-      showError("Aucune transaction valide n’a été trouvée. Revenez à votre espace Micolpe et relancez le paiement.");
-    } else if (typeof Paddle === "undefined") {
-      showError("Le service de paiement sécurisé est temporairement indisponible. Veuillez réessayer.");
-    } else {
-      if (PADDLE_ENV === "sandbox") Paddle.Environment.set("sandbox");
-      Paddle.Initialize({
-        token: PADDLE_CLIENT_TOKEN,
-        checkout: { settings: { displayMode: "overlay", theme: "light", locale: "fr", showAddDiscounts: true, showAddTaxId: true, allowLogout: false } },
-        eventCallback: function (event) {
-          switch (event.name) {
-            case "checkout.loaded": spinner.style.display = "none"; message.textContent = "Finalisez votre paiement dans la fenêtre sécurisée."; break;
-            case "checkout.completed": showSuccess(); break;
-            case "checkout.closed": if (!paymentCompleted) showNotice("La fenêtre de paiement a été fermée. Aucun nouveau paiement n’a été confirmé."); break;
-            case "checkout.error": showError("Paddle n’a pas pu finaliser cette opération. Vérifiez les informations ou réessayez."); break;
-          }
-        }
-      });
-      Paddle.Checkout.open({ transactionId: transactionId });
-    }
-  } catch (error) {
-    console.error("Paddle initialization error");
-    showError("Impossible de charger le paiement sécurisé. Veuillez réessayer ou contacter le support.");
-  }
-</script>
 </body>
 </html>

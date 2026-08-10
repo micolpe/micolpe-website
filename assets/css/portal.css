@@ -20,7 +20,11 @@
 .account-main {
   min-height: calc(100vh - 72px);
   background:
-    radial-gradient(circle at 12% 20%, rgba(217, 179, 108, 0.2), transparent 28%),
+    radial-gradient(
+      circle at 12% 20%,
+      rgba(217, 179, 108, 0.2),
+      transparent 28%
+    ),
     linear-gradient(135deg, #f6faf5, #fffaf0);
 }
 
@@ -132,7 +136,9 @@
   color: var(--ink);
   font: inherit;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .form-field input:focus {
@@ -312,7 +318,11 @@
   display: flex;
   flex-direction: column;
   background:
-    radial-gradient(circle at 10% 10%, rgba(217, 179, 108, 0.22), transparent 25%),
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(217, 179, 108, 0.22),
+      transparent 25%
+    ),
     linear-gradient(160deg, #0a5529, #063b29 70%);
   color: white;
 }
@@ -375,6 +385,10 @@
   font-weight: 780;
   text-align: left;
   cursor: pointer;
+}
+
+.portal-nav button[hidden] {
+  display: none;
 }
 
 .portal-nav button:hover,
@@ -505,6 +519,8 @@
   min-height: 146px;
   padding: 22px;
   border-radius: 22px;
+  display: flex;
+  flex-direction: column;
 }
 
 .summary-card .eyebrow {
@@ -527,6 +543,24 @@
   display: block;
   margin-top: 9px;
   color: var(--muted);
+}
+
+.summary-action {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 9px 0 0;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.summary-action:hover {
+  color: #073f21;
+  text-decoration: underline;
 }
 
 .portal-card {
@@ -633,6 +667,207 @@
   justify-content: space-between;
   gap: 14px;
   flex-wrap: wrap;
+}
+
+.payment-feedback {
+  padding: 15px 17px;
+  border: 1px solid;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.payment-feedback[hidden] {
+  display: none;
+}
+
+.payment-feedback.info {
+  border-color: #b9d9ee;
+  color: #165270;
+  background: #eaf6fd;
+}
+
+.payment-feedback.success {
+  border-color: #afd7bb;
+  color: #075b29;
+  background: #e7f6eb;
+}
+
+.payment-feedback.notice {
+  border-color: #ead29a;
+  color: #79581b;
+  background: #fff6db;
+}
+
+.payment-feedback.error {
+  border-color: #efb9bd;
+  color: #941f25;
+  background: #fdecee;
+}
+
+.payment-account-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.payment-account-card {
+  min-height: 132px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      circle at 100% 0,
+      rgba(217, 179, 108, 0.16),
+      transparent 42%
+    ),
+    white;
+  box-shadow: 0 12px 28px rgba(17, 56, 30, 0.07);
+}
+
+.payment-account-card .eyebrow {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.payment-account-card strong {
+  display: block;
+  margin-top: 12px;
+  color: var(--green);
+  font-size: clamp(28px, 4vw, 38px);
+  line-height: 1.05;
+}
+
+.payment-account-card small {
+  display: block;
+  margin-top: 9px;
+  color: var(--muted);
+}
+
+.payment-catalog-card {
+  display: grid;
+  gap: 20px;
+}
+
+.payment-catalog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.payment-catalog-heading h3 {
+  margin-bottom: 6px;
+  font-size: 23px;
+}
+
+.payment-catalog-heading p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--muted);
+}
+
+.payment-secure-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #cfe2d3;
+  border-radius: 999px;
+  color: #075b29;
+  background: #eef8f0;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.payment-offer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.payment-offer-card {
+  min-width: 0;
+  padding: 21px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dce7de;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff, #f8fbf8);
+}
+
+.payment-offer-card h4 {
+  margin: 0;
+  color: #173f27;
+  font-size: 20px;
+}
+
+.payment-offer-price {
+  display: block;
+  margin-top: 15px;
+  color: var(--green);
+  font-size: 32px;
+  line-height: 1;
+}
+
+.payment-offer-price-note {
+  display: block;
+  min-height: 18px;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.payment-offer-card p {
+  margin: 16px 0 20px;
+  color: #526158;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.payment-offer-button {
+  width: 100%;
+  margin-top: auto;
+}
+
+.payment-offer-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.payment-trial-note {
+  color: #79581b;
+  border-color: #ead29a;
+  background: #fff6db;
+}
+
+.payment-legal-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  flex-wrap: wrap;
+}
+
+.payment-legal-note a {
+  color: var(--green);
+  font-weight: 800;
+}
+
+.payment-catalog-loading,
+.payment-catalog-empty {
+  grid-column: 1 / -1;
+  padding: 26px;
+  border: 1px dashed #cad8cd;
+  border-radius: 17px;
+  color: var(--muted);
+  text-align: center;
+  background: #f8faf8;
 }
 
 .table-wrap {
@@ -906,7 +1141,9 @@
   justify-content: center;
 }
 
-.pedigree-sheet:not([data-level="1"]) .pedigree-generation:first-child .pedigree-node {
+.pedigree-sheet:not([data-level="1"])
+  .pedigree-generation:first-child
+  .pedigree-node {
   flex: 0 0 calc((100% - 5px) / 2);
 }
 
@@ -925,7 +1162,8 @@
 }
 
 .pedigree-node.with-shadow {
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--pedigree-line) 70%, transparent);
+  box-shadow: 2px 2px 0
+    color-mix(in srgb, var(--pedigree-line) 70%, transparent);
 }
 
 .pedigree-node.empty {
@@ -936,7 +1174,8 @@
 .pedigree-node.with-separator .pedigree-ring {
   margin: 0 -5px 2px;
   padding: 0 16px 3px 5px;
-  border-bottom: 1px solid color-mix(in srgb, var(--pedigree-line) 80%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--pedigree-line) 80%, transparent);
 }
 
 .pedigree-gender {
@@ -1095,6 +1334,10 @@
   .pigeon-filters {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .payment-offer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 850px) {
@@ -1135,6 +1378,10 @@
   .portal-card-grid {
     grid-template-columns: 1fr;
   }
+
+  .payment-offer-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 650px) {
@@ -1148,6 +1395,7 @@
   }
 
   .summary-grid,
+  .payment-account-grid,
   .data-list,
   .pigeon-filters {
     grid-template-columns: 1fr;

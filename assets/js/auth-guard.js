@@ -2,6 +2,7 @@ import {
   AUTH_ERROR,
   checkProfileAccess,
   getCurrentSession,
+  isSubscriptionExpired,
   logoutCurrentBrowser,
 } from './auth.js';
 import { supabase } from './supabase-client.js';
@@ -29,7 +30,7 @@ export async function requireActiveSession() {
   const { data: profile, error } = await supabase
     .from('profile')
     .select(
-      'id,name,email,phone,is_verified,is_active,is_trial,subscription_type,subscription_start,subscription_end,created_at,last_login',
+      'id,name,email,phone,is_verified,is_active,is_trial,subscription_type,subscription_start,subscription_end,pending_deletion_at,created_at,last_login',
     )
     .eq('id', session.user.id)
     .maybeSingle();
@@ -42,12 +43,17 @@ export async function requireActiveSession() {
     return null;
   }
 
-  const accessError = checkProfileAccess(profile);
+  const renewalOnly = isSubscriptionExpired(profile);
+  const accessError = checkProfileAccess(profile, { allowExpired: true });
   if (accessError) {
     await logoutCurrentBrowser();
     redirectToLogin(accessError);
     return null;
   }
 
-  return { session, profile };
+  return {
+    session,
+    profile,
+    accessMode: renewalOnly ? 'renewal' : 'full',
+  };
 }

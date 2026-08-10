@@ -51,19 +51,23 @@ function hideStatus() {
   statusBox.textContent = '';
 }
 
-function safeNextDestination() {
+function safeNextDestination({ renewalOnly = false } = {}) {
   const next = new URLSearchParams(window.location.search).get('next');
   const defaultDashboard = isEnglish ? '/en/dashboard.html' : '/dashboard.html';
-  if (!next) return defaultDashboard;
+  if (!next) return `${defaultDashboard}${renewalOnly ? '#payments' : ''}`;
 
   try {
     const destination = new URL(next, window.location.origin);
-    if (destination.origin !== window.location.origin) return defaultDashboard;
+    if (destination.origin !== window.location.origin) {
+      return `${defaultDashboard}${renewalOnly ? '#payments' : ''}`;
+    }
     const allowedDashboards = ['/dashboard.html', '/en/dashboard.html'];
-    if (!allowedDashboards.includes(destination.pathname)) return defaultDashboard;
-    return `${destination.pathname}${destination.search}${destination.hash}`;
+    if (!allowedDashboards.includes(destination.pathname)) {
+      return `${defaultDashboard}${renewalOnly ? '#payments' : ''}`;
+    }
+    return `${destination.pathname}${destination.search}${renewalOnly ? '#payments' : destination.hash}`;
   } catch {
-    return defaultDashboard;
+    return `${defaultDashboard}${renewalOnly ? '#payments' : ''}`;
   }
 }
 
@@ -134,8 +138,20 @@ form.addEventListener('submit', async (event) => {
   const displayName = String(
     result.profile?.name || result.user?.email || tr('utilisateur', 'member'),
   ).trim();
-  showStatus(tr(`Bienvenue ${displayName}. Connexion réussie.`, `Welcome ${displayName}. You are signed in.`), 'success');
-  window.location.replace(safeNextDestination());
+  const renewalOnly = result.accessMode === 'renewal';
+  showStatus(
+    renewalOnly
+      ? tr(
+          `Bienvenue ${displayName}. Renouvelez votre accès pour rouvrir votre espace Micolpe.`,
+          `Welcome ${displayName}. Renew your access to reopen your Micolpe account.`,
+        )
+      : tr(
+          `Bienvenue ${displayName}. Connexion réussie.`,
+          `Welcome ${displayName}. You are signed in.`,
+        ),
+    'success',
+  );
+  window.location.replace(safeNextDestination({ renewalOnly }));
 });
 
 initializeLogin();
