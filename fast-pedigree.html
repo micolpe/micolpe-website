@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Créez, scannez, personnalisez et exportez un pedigree de pigeon sur 4 générations."
+    />
+    <title>Fast Pedigree – Micolpe</title>
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <link rel="stylesheet" href="assets/css/fast-pedigree.css?v=20260814-14" />
+    <link rel="icon" href="assets/img/logo.png" />
+  </head>
+  <body class="fp-page">
+    <header class="topbar fp-topbar">
+      <div class="container nav">
+        <a class="brand" href="index.html"
+          ><img src="assets/img/logo.png" alt="Logo Micolpe" /><span
+            >Micolpe</span
+          ></a
+        >
+        <nav class="links">
+          <a href="index.html">Accueil</a
+          ><a href="fast-pedigree.html">Fast Pedigree</a
+          ><a href="guide.html">Guide</a><a href="login.html">Compte</a
+          ><a href="en/fast-pedigree.html">EN</a>
+        </nav>
+        <a class="btn primary small" href="fast-pedigree-user.html"
+          >Version membre</a
+        >
+      </div>
+    </header>
+    <main
+      id="fast-pedigree-app"
+      class="fp-app"
+      data-lang="fr"
+      data-mode="visitor"
+    >
+      <section class="fp-intro">
+        <div class="container fp-intro-grid">
+          <div>
+            <span class="badge">Fast Pedigree • Accès visiteur</span>
+            <h1>Votre pedigree A4, de la saisie au scan.</h1>
+            <p>
+              Éditez jusqu’à 31 pigeons, scannez toute la branche d’une case et
+              personnalisez le document avant l’export ou le partage. Vos
+              fichiers restent temporaires.
+            </p>
+          </div>
+          <div class="fp-intro-points">
+            <span><strong>31</strong>cases</span
+            ><span><strong>4</strong>générations d’ancêtres</span
+            ><span><strong>A4</strong>PDF et image</span>
+          </div>
+        </div>
+      </section>
+      <div class="fp-sticky-tools">
+        <div class="container fp-main-toolbar">
+          <button
+            class="btn secondary small"
+            id="fp-new-pedigree"
+            type="button"
+            data-action
+          >
+            Nouveau</button
+          ><label class="fp-inline-field"
+            >Générations affichées
+            <select id="fp-editor-generations">
+              <option value="auto">Auto</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5" selected>5</option>
+            </select></label
+          ><span class="fp-privacy-note"
+            >Brouillon conservé uniquement dans cet onglet</span
+          ><a class="btn primary small" href="register.html"
+            >Créer un compte pour sauvegarder</a
+          >
+        </div>
+      </div>
+      <div class="fp-mobile-switch container">
+        <button class="is-active" type="button" data-mobile-panel="editor">
+          Éditeur</button
+        ><button type="button" data-mobile-panel="preview">Aperçu A4</button>
+      </div>
+      <div class="container fp-workspace">
+        <section class="fp-editor-panel" data-panel="editor">
+          <header class="fp-panel-heading">
+            <div>
+              <span class="eyebrow">Édition</span>
+              <h2>Pedigree interactif</h2>
+            </div>
+            <div class="fp-panel-side">
+              <p>Cliquez une case pour la modifier ou scanner sa branche complète.</p>
+              <div class="fp-zoom-controls" aria-label="Zoom de l’éditeur">
+                <button id="fp-editor-zoom-out" type="button" aria-label="Réduire le zoom">−</button>
+                <output id="fp-editor-zoom-value">100%</output>
+                <button id="fp-editor-zoom-in" type="button" aria-label="Augmenter le zoom">+</button>
+              </div>
+            </div>
+          </header>
+          <div class="fp-editor-scroll">
+            <div id="fp-editor-tree" class="fp-editor-tree"></div>
+          </div>
+          <aside class="fp-node-editor">
+            <div class="fp-node-toolbar">
+              <label class="fp-field"
+                >Sexe du pigeon central<select id="fp-root-gender">
+                  <option value="?">Non défini</option>
+                  <option value="M">Mâle</option>
+                  <option value="F">Femelle</option>
+                </select></label
+              ><button class="btn primary" id="fp-scan-selected" type="button" data-action>
+                Scanner un pedigree
+              </button>
+              <button class="btn secondary" id="fp-clear-branch" type="button" data-action>
+                Vider la branche
+              </button>
+              <label class="fp-field fp-color-control"
+                >Fond de la case sélectionnée<input id="fp-selected-frame-color" type="color" value="#ffffff"
+              /></label>
+            </div>
+          </aside>
+        </section>
+        <section class="fp-preview-panel" data-panel="preview">
+          <header class="fp-panel-heading">
+            <div>
+              <span class="eyebrow">Studio d’export</span>
+              <h2>Aperçu A4</h2>
+            </div>
+            <div class="fp-panel-side">
+              <p>Personnalisez le document avant de l’exporter.</p>
+              <div class="fp-zoom-controls" aria-label="Zoom du Preview">
+                <button id="fp-preview-zoom-out" type="button" aria-label="Réduire le zoom">−</button>
+                <output id="fp-preview-zoom-value">100%</output>
+                <button id="fp-preview-zoom-in" type="button" aria-label="Augmenter le zoom">+</button>
+              </div>
+            </div>
+          </header>
+          <details class="fp-preview-toolbox" open>
+            <summary>Manette à outils</summary>
+            <div id="fp-preview-controls" class="fp-controls-grid">
+              <label>Titre<input name="title" /></label
+              ><label
+                >Générations<select name="generations">
+                  <option value="auto">Auto</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select></label
+              ><label
+                >Police<select id="fp-preview-font" name="font"></select></label
+              ><label
+                >Arrondi <span id="fp-preview-radius-value">8px</span
+                ><input name="radius" type="range" min="0" max="24" /></label
+              ><label>Nom / loft<input name="identityName" /></label
+              ><label>E-mail<input name="identityEmail" type="email" /></label
+              ><label>Téléphone<input name="identityPhone" /></label
+              ><label>Adresse<input name="identityAddress" /></label
+              ><label>Site web<input name="identityWebsite" /></label
+              ><label
+                >Couleur titre<input name="colorTitle" type="color" /></label
+              ><label
+                >Couleur lignes<input name="colorLine" type="color" /></label
+              ><label
+                >Couleur bagues<input name="colorRing" type="color" /></label
+              ><label>Couleur noms<input name="colorName" type="color" /></label
+              ><label
+                >Couleur éleveurs<input
+                  name="colorFancier"
+                  type="color" /></label
+              ><label
+                >Couleur pigeons<input name="colorColor" type="color" /></label
+              ><label
+                >Logo temporaire<input
+                  id="fp-logo-file"
+                  type="file"
+                  accept="image/*" /></label
+              ><label
+                >Photo temporaire<input
+                  id="fp-photo-file"
+                  type="file"
+                  accept="image/*" /></label
+              ><label class="fp-check"
+                ><input name="withShadow" type="checkbox" /> Ombre</label
+              ><label class="fp-check"
+                ><input name="withSeparator" type="checkbox" />
+                Séparateur</label
+              ><label class="fp-check"
+                ><input name="withDate" type="checkbox" /> Date</label
+              ><label class="fp-check"
+                ><input name="withPhoto" type="checkbox" /> Photo</label
+            </div>
+          </details>
+          <div class="fp-paper-viewport">
+            <div id="fp-paper-stage" class="fp-paper-stage">
+              <article id="fp-paper" class="fp-paper"></article>
+            </div>
+          </div>
+          <div class="fp-export-actions">
+            <button
+              class="btn primary"
+              id="fp-export-pdf"
+              type="button"
+              data-action
+            >
+              PDF A4</button
+            ><button
+              class="btn secondary"
+              id="fp-export-png"
+              type="button"
+              data-action
+            >
+              PNG</button
+            ><button
+              class="btn secondary"
+              id="fp-export-jpeg"
+              type="button"
+              data-action
+            >
+              JPEG</button
+            ><button class="btn red" id="fp-share" type="button" data-action>
+              Partager
+            </button>
+          </div>
+        </section>
+      </div>
+      <div
+        id="fp-status"
+        class="fp-status"
+        role="status"
+        aria-live="polite"
+        hidden
+      ></div>
+      <div id="fp-scan-modal" class="fp-modal" hidden>
+        <button
+          class="fp-modal-backdrop"
+          type="button"
+          data-close-scan
+        ></button>
+        <section class="fp-scan-dialog" role="dialog" aria-modal="true">
+          <header>
+            <div>
+              <span class="eyebrow">Scan de branche</span>
+              <h2>Positionnez les cadres</h2>
+              <p id="fp-scan-branch-count"></p>
+            </div>
+            <button class="fp-modal-close" type="button" data-close-scan>
+              ×
+            </button>
+          </header>
+          <div class="fp-scan-toolbar">
+            <label class="btn secondary"
+              >Choisir PDF ou image<input
+                id="fp-scan-file"
+                type="file"
+                accept="application/pdf,image/*"
+                hidden /></label
+            ><button
+              class="btn secondary"
+              id="fp-scan-reset-boxes"
+              type="button"
+            >
+              Réinitialiser les cadres</button
+            ><div class="fp-zoom-controls" aria-label="Zoom du pedigree scanné">
+              <button id="fp-scan-zoom-out" type="button" aria-label="Réduire le zoom">−</button>
+              <output id="fp-scan-zoom-value">100%</output>
+              <button id="fp-scan-zoom-in" type="button" aria-label="Augmenter le zoom">+</button>
+            </div><span
+              >Glisser pour déplacer • poignée pour redimensionner • Maj pour
+              sélectionner plusieurs</span
+            >
+          </div>
+          <div id="fp-scan-progress" class="fp-scan-progress" role="status" aria-live="polite" hidden></div>
+          <div id="fp-scan-empty" class="fp-scan-empty">
+            <strong>Ajoutez la première page du pedigree</strong>
+            <p>
+              Les PDF texte sont lus localement. Les images utilisent l’OCR
+              sécurisé, sans stockage.
+            </p>
+          </div>
+          <div id="fp-scan-stage" class="fp-scan-stage" hidden>
+            <canvas id="fp-scan-canvas"></canvas>
+            <div id="fp-scan-overlay"></div>
+          </div>
+          <footer>
+            <small
+              >Visiteurs : 2 documents OCR gratuits par jour. Les PDF texte
+              restent illimités.</small
+            ><button
+              class="btn primary"
+              id="fp-scan-run"
+              type="button"
+              disabled
+            >
+              Lancer le scan
+            </button>
+          </footer>
+        </section>
+      </div>
+    </main>
+    <script src="assets/js/supabase-config.js"></script>
+    <script src="assets/vendor/html2canvas.min.js"></script>
+    <script src="assets/vendor/jspdf.umd.min.js"></script>
+    <script type="module" src="assets/js/fast-pedigree-app.js?v=20260814-14"></script>
+  </body>
+</html>

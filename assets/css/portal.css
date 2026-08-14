@@ -374,7 +374,8 @@
   gap: 7px;
 }
 
-.portal-nav button {
+.portal-nav button,
+.portal-nav a {
   width: 100%;
   padding: 12px 14px;
   border: 1px solid transparent;
@@ -385,10 +386,12 @@
   font-weight: 780;
   text-align: left;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .portal-nav button:hover,
-.portal-nav button.active {
+.portal-nav button.active,
+.portal-nav a:hover {
   border-color: rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.12);
   color: white;
@@ -597,6 +600,109 @@
   margin: 4px 0 0;
   overflow-wrap: anywhere;
   font-weight: 800;
+}
+
+.loft-edit-card {
+  margin-top: 18px;
+}
+
+.loft-edit-card[hidden] {
+  display: none;
+}
+
+.loft-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.loft-form-wide {
+  grid-column: 1 / -1;
+}
+
+.loft-edit-card .form-field > span {
+  color: #2b392f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.loft-edit-card .form-field input,
+.loft-edit-card .form-field select,
+.loft-edit-card .form-field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid #cbd9cd;
+  border-radius: 13px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.loft-edit-card .form-field textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.loft-edit-card .form-field input:focus,
+.loft-edit-card .form-field select:focus,
+.loft-edit-card .form-field textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px rgba(11, 107, 42, .11);
+}
+
+.loft-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.loft-feedback {
+  margin-top: 16px;
+  padding: 13px 15px;
+  border: 1px solid;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.loft-feedback[hidden] {
+  display: none;
+}
+
+.loft-feedback.info {
+  border-color: #b9d9ee;
+  color: #165270;
+  background: #eaf6fd;
+}
+
+.loft-feedback.success {
+  border-color: #afd7bb;
+  color: #075b29;
+  background: #e7f6eb;
+}
+
+.loft-feedback.error {
+  border-color: #efb9bd;
+  color: #941f25;
+  background: #fdecee;
+}
+
+@media (max-width: 720px) {
+  .loft-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .loft-form-wide {
+    grid-column: auto;
+  }
+
+  .loft-form-actions .btn {
+    flex: 1 1 0;
+  }
 }
 
 .status-pill,
@@ -1387,7 +1493,8 @@
     padding-bottom: 4px;
   }
 
-  .portal-nav button {
+  .portal-nav button,
+  .portal-nav a {
     width: auto;
     flex: 0 0 auto;
   }

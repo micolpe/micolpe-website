@@ -12,7 +12,7 @@
       content="Espace privé Micolpe de consultation du profil, du loft, des appareils et des pigeons."
     />
     <link rel="stylesheet" href="assets/css/style.css" />
-    <link rel="stylesheet" href="assets/css/portal.css" />
+    <link rel="stylesheet" href="assets/css/portal.css?v=20260814-13" />
     <link rel="icon" href="assets/img/logo.png" />
   </head>
   <body class="portal-body">
@@ -41,7 +41,7 @@
             Mon profil
           </button>
           <button type="button" data-section-target="payments">
-            Paiements
+            Activation
           </button>
           <button type="button" data-section-target="loft">Mon loft</button>
           <button type="button" data-section-target="devices">
@@ -105,9 +105,9 @@
           >
             <strong>Votre accès Micolpe est expiré.</strong>
             <span
-              >Seule la section Paiements reste accessible. Choisissez une durée
-              d’accès pour rouvrir automatiquement toutes les sections après
-              confirmation du paiement.</span
+              >Seule la section Activation reste accessible. La préparation du
+              paiement sécurisé est en cours. Contactez l’assistance si vous
+              avez besoin d’aide.</span
             >
           </div>
 
@@ -129,7 +129,7 @@
                 <strong id="summary-subscription">—</strong>
                 <small id="summary-subscription-detail">Chargement…</small>
                 <button class="summary-action" type="button" data-open-payments>
-                  Gérer mes paiements
+                  Voir l’activation
                 </button>
               </article>
               <article class="summary-card">
@@ -269,11 +269,8 @@
           >
             <div class="section-heading">
               <div>
-                <h2>Paiements</h2>
-                <p>
-                  Activez ou prolongez Micolpe et rechargez vos crédits Poster
-                  IA.
-                </p>
+                <h2>Activation</h2>
+                <p>Informations sur l’accès associé à votre compte Micolpe.</p>
               </div>
             </div>
 
@@ -303,57 +300,27 @@
             <article class="portal-card payment-catalog-card">
               <div class="payment-catalog-heading">
                 <div>
-                  <h3>Activer ou prolonger Micolpe</h3>
+                  <span class="eyebrow">Bientôt disponible</span>
+                  <h3>Préparation du paiement sécurisé en cours</h3>
                   <p>
-                    Une seule transaction, sans renouvellement caché. Une
-                    prolongation commence après votre date de fin actuelle.
+                    L’activation ou la prolongation en ligne est temporairement
+                    indisponible. Aucun bouton ne peut lancer d’opération depuis
+                    le site pendant cette préparation.
                   </p>
                 </div>
-                <span class="payment-secure-badge"
-                  >Paiement sécurisé par Lemon Squeezy</span
+              </div>
+              <div class="checkout-actions" style="justify-content: flex-start">
+                <a class="btn secondary small" href="contact.html"
+                  >Contacter l’assistance</a
                 >
-              </div>
-              <div class="payment-offer-grid" id="subscription-offers">
-                <div class="payment-catalog-loading">
-                  Chargement des offres…
-                </div>
-              </div>
-            </article>
-
-            <article class="portal-card payment-catalog-card">
-              <div class="payment-catalog-heading">
-                <div>
-                  <h3>Crédits Micolpe Poster Studio</h3>
-                  <p>
-                    Chaque génération réussie consomme un crédit. Les crédits
-                    achetés restent attachés à votre compte.
-                  </p>
-                </div>
-              </div>
-              <div
-                class="portal-note payment-trial-note"
-                id="poster-payment-trial-note"
-                hidden
-              >
-                Activez d’abord votre abonnement Micolpe pour pouvoir acheter
-                des packs posters.
-              </div>
-              <div class="payment-offer-grid" id="poster-offers">
-                <div class="payment-catalog-loading">Chargement des packs…</div>
               </div>
             </article>
 
             <div class="portal-note payment-legal-note">
-              <span
-                >Le total final, les taxes applicables et le moyen de paiement
-                sont affichés dans le checkout Lemon Squeezy. L’activation
-                intervient uniquement après confirmation sécurisée reçue par le
-                serveur.</span
-              >
+              <span>Les offres seront réactivées une fois le service prêt.</span>
               <span
                 ><a href="terms.html">Conditions générales</a> ·
-                <a href="privacy.html">Confidentialité</a> ·
-                <a href="refund.html">Remboursements</a></span
+                <a href="privacy.html">Confidentialité</a></span
               >
             </div>
           </section>
@@ -371,12 +338,11 @@
               </div>
               <div class="future-actions">
                 <button
-                  class="btn secondary future-action"
+                  class="btn secondary"
+                  id="loft-edit-button"
                   type="button"
-                  disabled
-                  title="Disponible prochainement"
                 >
-                  Modifier le loft <span class="soon-chip">Bientôt</span>
+                  Modifier le loft
                 </button>
               </div>
             </div>
@@ -416,6 +382,61 @@
                   <dd id="loft-language">—</dd>
                 </div>
               </dl>
+            </article>
+
+            <article class="portal-card loft-edit-card" id="loft-edit-card" hidden>
+              <form id="loft-edit-form" novalidate>
+                <div class="loft-form-grid">
+                  <label class="form-field">
+                    <span>Nom du loft</span>
+                    <input id="loft-form-name" maxlength="100" autocomplete="organization" />
+                  </label>
+                  <label class="form-field">
+                    <span>Téléphone</span>
+                    <input id="loft-form-phone" type="tel" maxlength="50" autocomplete="tel" />
+                  </label>
+                  <label class="form-field">
+                    <span>E-mail</span>
+                    <input id="loft-form-email" type="email" maxlength="100" autocomplete="email" />
+                  </label>
+                  <label class="form-field">
+                    <span>Site Web</span>
+                    <input id="loft-form-website" maxlength="255" autocomplete="url" />
+                  </label>
+                  <label class="form-field loft-form-wide">
+                    <span>Adresse</span>
+                    <textarea id="loft-form-address" rows="3" maxlength="1000" autocomplete="street-address"></textarea>
+                  </label>
+                  <label class="form-field loft-form-wide">
+                    <span>Réseaux sociaux</span>
+                    <input id="loft-form-social" maxlength="255" />
+                  </label>
+                  <label class="form-field">
+                    <span>Latitude</span>
+                    <input id="loft-form-latitude" inputmode="decimal" placeholder="33.573110" />
+                  </label>
+                  <label class="form-field">
+                    <span>Longitude</span>
+                    <input id="loft-form-longitude" inputmode="decimal" placeholder="-7.589843" />
+                  </label>
+                  <label class="form-field">
+                    <span>Langue</span>
+                    <select id="loft-form-language">
+                      <option value="fr">Français</option>
+                      <option value="en">English</option>
+                      <option value="es">Español</option>
+                      <option value="nl">Nederlands</option>
+                      <option value="it">Italiano</option>
+                      <option value="de">Deutsch</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="loft-feedback" id="loft-feedback" role="status" aria-live="polite" hidden></div>
+                <div class="loft-form-actions">
+                  <button class="btn secondary" id="loft-cancel-button" type="button">Annuler</button>
+                  <button class="btn primary" id="loft-save-button" type="submit">Enregistrer</button>
+                </div>
+              </form>
             </article>
           </section>
 
@@ -483,14 +504,9 @@
                 </p>
               </div>
               <div class="future-actions">
-                <button
-                  class="btn primary future-action"
-                  type="button"
-                  disabled
-                  title="Disponible prochainement"
-                >
-                  Ajouter un pigeon <span class="soon-chip">Bientôt</span>
-                </button>
+                <a class="btn primary" href="fast-pedigree-user.html">
+                  Nouveau pigeon
+                </a>
               </div>
             </div>
 
@@ -667,6 +683,6 @@
       integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU"
       crossorigin="anonymous"
     ></script>
-    <script type="module" src="assets/js/portal.js"></script>
+    <script type="module" src="assets/js/portal.js?v=20260814-13"></script>
   </body>
 </html>
