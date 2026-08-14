@@ -3,10 +3,9 @@ import { requireActiveSession } from "./auth-guard.js";
 import { supabase } from "./supabase-client.js";
 
 const PAGE_SIZE = 50;
+const LOFT_FIELDS = "id,nameloft,addressloft,phone,email,latitude,longitude,logo,social,lang,confirmed,website,updated_at";
 const isEnglish = document.documentElement.lang === "en";
 const tr = (fr, en) => (isEnglish ? en : fr);
-const PENDING_PAYMENT_STORAGE_KEY = "micolpe_lemonsqueezy_pending_payment";
-const PENDING_PAYMENT_MAX_AGE_MS = 60 * 60 * 1000;
 const portalState = {
   session: null,
   profile: null,
@@ -16,16 +15,7 @@ const portalState = {
   pedigreeSettings: null,
   pigeonCount: 0,
   page: 0,
-  plans: [],
-  posterOffers: [],
   posterBalance: 0,
-  paymentCatalogError: null,
-  checkoutAllowed: false,
-  checkoutTestMode: true,
-  checkoutAccessError: null,
-  paymentInProgress: false,
-  confirmationInProgress: false,
-  pendingPayment: null,
   accessMode: "full",
 };
 
@@ -87,18 +77,6 @@ function formatSubscription(profile) {
   return subscriptionLabels[rawType] || valueOrFallback(rawType, "Standard");
 }
 
-function isTrialProfile(profile = portalState.profile) {
-  const subscriptionType = String(profile?.subscription_type || "")
-    .trim()
-    .toLowerCase();
-  if (subscriptionType) return subscriptionType === "trial";
-  return profile?.is_trial === true || profile?.is_trial === 1;
-}
-
-function delay(milliseconds) {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-}
-
 function formatRing(pigeon) {
   if (String(pigeon?.ring || "").trim()) return String(pigeon.ring).trim();
 
@@ -146,9 +124,7 @@ async function loadPortalData(session, profile) {
     await Promise.all([
       supabase
         .from("loft")
-        .select(
-          "id,nameloft,addressloft,phone,email,latitude,longitude,logo,social,lang,confirmed,website,updated_at",
-        )
+        .select(LOFT_FIELDS)
         .eq("user_id", userId)
         .order("updated_at", { ascending: false })
         .limit(1)
@@ -220,69 +196,17 @@ async function loadPortalData(session, profile) {
   };
 }
 
-async function loadPaymentData(userId) {
-  const [plansResult, posterOffersResult, walletResult] = await Promise.all([
-    supabase
-      .from("plan")
-      .select("id,name,duration_days,price,active")
-      .eq("active", true)
-      .order("price", { ascending: true }),
-    supabase
-      .from("poster_offers")
-      .select("id,name,credits_count,price,currency,is_active,sort_order")
-      .eq("is_active", true)
-      .neq("price", 0)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("poster_wallets")
-      .select("balance")
-      .eq("profile_id", userId)
-      .maybeSingle(),
-  ]);
+async function loadActivationData(userId) {
+  const walletResult = await supabase
+    .from("poster_wallets")
+    .select("balance")
+    .eq("profile_id", userId)
+    .maybeSingle();
 
-  if (plansResult.error) throw plansResult.error;
-  if (posterOffersResult.error) throw posterOffersResult.error;
   if (walletResult.error) throw walletResult.error;
 
   return {
-    plans: (plansResult.data || []).filter((offer) =>
-      [366, 1096, 1827].includes(Number(offer.duration_days)),
-    ),
-    posterOffers: (posterOffersResult.data || []).filter((offer) =>
-      [10, 50, 100].includes(Number(offer.credits_count)),
-    ),
     posterBalance: Number(walletResult.data?.balance) || 0,
-    paymentCatalogError: null,
-  };
-}
-
-async function loadCheckoutAccess() {
-  const { data, error } = await supabase.functions.invoke(
-    "create_payment_session",
-    {
-      body: { action: "checkout_access" },
-    },
-  );
-
-  if (error) throw error;
-
-  const provider = String(data?.provider || "")
-    .trim()
-    .toLowerCase();
-
-  if (
-    data?.success !== true ||
-    provider !== "lemonsqueezy" ||
-    typeof data?.test_mode !== "boolean" ||
-    typeof data?.checkout_allowed !== "boolean"
-  ) {
-    throw new Error("Invalid checkout access response");
-  }
-
-  return {
-    checkoutAllowed: data.checkout_allowed,
-    checkoutTestMode: data.test_mode,
-    checkoutAccessError: null,
   };
 }
 
@@ -378,129 +302,6 @@ function renderProfile() {
   setText("profile-last-login", formatDate(profile.last_login));
 }
 
-function planDisplayName(offer) {
-  const days = Number(offer?.duration_days);
-  if (days >= 1800) return tr("5 ans", "5 years");
-  if (days >= 1000) return tr("3 ans", "3 years");
-  if (days >= 300) return tr("1 an", "1 year");
-  return valueOrFallback(offer?.name, tr("Abonnement", "Subscription"));
-}
-
-function offerPriceLabel(offer) {
-  const price = String(offer?.price ?? "").trim();
-  const currency = String(offer?.currency || "EUR")
-    .trim()
-    .toUpperCase();
-  if (!price) return tr("Prix indisponible", "Price unavailable");
-  return currency === "EUR" ? `${price} €` : `${price} ${currency}`;
-}
-
-function setPaymentFeedback(kind, message) {
-  const feedback = document.querySelector("#payment-feedback");
-  if (!feedback) return;
-
-  if (!message) {
-    feedback.hidden = true;
-    feedback.textContent = "";
-    feedback.className = "payment-feedback";
-    return;
-  }
-
-  feedback.hidden = false;
-  feedback.className = `payment-feedback ${kind}`;
-  feedback.textContent = message;
-}
-
-function createPaymentOfferCard(offer, paymentType) {
-  const isSubscription = paymentType === "subscription";
-  const isTrial = isTrialProfile();
-  const article = document.createElement("article");
-  article.className = "payment-offer-card";
-
-  const title = document.createElement("h4");
-  title.textContent = isSubscription
-    ? planDisplayName(offer)
-    : tr(
-        `${Number(offer.credits_count) || 0} crédits`,
-        `${Number(offer.credits_count) || 0} credits`,
-      );
-
-  const price = document.createElement("strong");
-  price.className = "payment-offer-price";
-  price.textContent = offerPriceLabel(offer);
-
-  const priceNote = document.createElement("small");
-  priceNote.className = "payment-offer-price-note";
-  priceNote.textContent = tr(
-    "Total final et taxes confirmés dans le checkout",
-    "Final total and taxes confirmed at checkout",
-  );
-
-  const description = document.createElement("p");
-  description.textContent = isSubscription
-    ? tr(
-        `Accès complet à Micolpe pendant ${planDisplayName(offer)}.`,
-        `Full Micolpe access for ${planDisplayName(offer)}.`,
-      )
-    : tr(
-        "Ajoutés automatiquement au portefeuille après confirmation du paiement.",
-        "Automatically added to the wallet after payment confirmation.",
-      );
-
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "btn primary payment-offer-button";
-  button.textContent = isSubscription
-    ? isTrial
-      ? tr("Activer Micolpe", "Activate Micolpe")
-      : tr("Prolonger mon abonnement", "Extend my subscription")
-    : tr("Acheter ce pack", "Buy this pack");
-  button.disabled =
-    portalState.paymentInProgress ||
-    !portalState.checkoutAllowed ||
-    (!isSubscription && (isTrial || isRenewalOnly()));
-
-  if (!portalState.checkoutAllowed) {
-    button.title = tr(
-      "Le checkout n’est pas encore disponible pour ce compte.",
-      "Checkout is not available for this account yet.",
-    );
-  } else if (!isSubscription && isRenewalOnly()) {
-    button.title = tr(
-      "Renouvelez d’abord votre accès Micolpe.",
-      "Renew your Micolpe access first.",
-    );
-  }
-
-  button.addEventListener("click", () => startPayment(paymentType, offer));
-
-  article.append(title, price, priceNote, description, button);
-  return article;
-}
-
-function renderPaymentOfferList(containerId, offers, paymentType) {
-  const container = document.querySelector(`#${containerId}`);
-  if (!container) return;
-  container.replaceChildren();
-
-  if (!offers.length) {
-    const empty = document.createElement("div");
-    empty.className = "payment-catalog-empty";
-    empty.textContent = tr(
-      "Aucune offre Lemon Squeezy active n’est disponible.",
-      "No active Lemon Squeezy offer is available.",
-    );
-    container.append(empty);
-    return;
-  }
-
-  const fragment = document.createDocumentFragment();
-  for (const offer of offers) {
-    fragment.append(createPaymentOfferCard(offer, paymentType));
-  }
-  container.append(fragment);
-}
-
 function renderPayments() {
   if (!document.querySelector("#section-payments")) return;
 
@@ -518,485 +319,10 @@ function renderPayments() {
       : tr("Aucune date de fin renseignée", "No end date available"),
   );
   setText("payment-poster-balance", String(portalState.posterBalance), "0");
-
-  const trialNote = document.querySelector("#poster-payment-trial-note");
-  if (trialNote) trialNote.hidden = !isTrialProfile();
-
-  renderPaymentOfferList(
-    "subscription-offers",
-    portalState.plans,
-    "subscription",
-  );
-  renderPaymentOfferList(
-    "poster-offers",
-    portalState.posterOffers,
-    "poster_recharge",
-  );
-
-  if (portalState.paymentCatalogError) {
-    setPaymentFeedback(
-      "error",
-      tr(
-        "Les offres de paiement ne peuvent pas être chargées pour le moment. Réessayez dans quelques instants.",
-        "Payment offers cannot be loaded at the moment. Please try again shortly.",
-      ),
-    );
-  } else if (portalState.checkoutAccessError) {
-    setPaymentFeedback(
-      "error",
-      tr(
-        "L’accès au checkout ne peut pas être vérifié pour le moment. Aucun paiement ne peut être lancé.",
-        "Checkout access cannot be verified at the moment. No payment can be started.",
-      ),
-    );
-  } else if (portalState.checkoutTestMode && !portalState.checkoutAllowed) {
-    setPaymentFeedback(
-      "notice",
-      tr(
-        "Le paiement en ligne est en cours d’activation. Le checkout test est temporairement réservé au compte Micolpe autorisé.",
-        "Online payment is being activated. Test checkout is temporarily limited to the authorized Micolpe account.",
-      ),
-    );
-  } else if (portalState.checkoutTestMode) {
-    setPaymentFeedback(
-      "info",
-      tr(
-        "Mode test Lemon Squeezy : ce checkout est réservé à votre compte et aucun débit réel ne sera effectué.",
-        "Lemon Squeezy test mode: this checkout is limited to your account and no real charge will be made.",
-      ),
-    );
-  }
-}
-
-function isUuid(value) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    String(value || "").trim(),
-  );
-}
-
-function readSecureCheckoutUrl(value) {
-  let url;
-
-  try {
-    url = new URL(String(value || "").trim());
-  } catch {
-    return null;
-  }
-
-  const host = url.hostname.toLowerCase();
-  const allowedHost =
-    host === "lemonsqueezy.com" ||
-    host.endsWith(".lemonsqueezy.com") ||
-    host === "checkout.micolpe.com" ||
-    host === "store.micolpe.com";
-
-  return url.protocol === "https:" && allowedHost ? url : null;
-}
-
-function clearStoredPendingPayment() {
-  try {
-    window.localStorage.removeItem(PENDING_PAYMENT_STORAGE_KEY);
-  } catch {
-    // Storage may be unavailable in a restricted browser context.
-  }
-}
-
-function storePendingPayment(pendingPayment) {
-  try {
-    window.localStorage.setItem(
-      PENDING_PAYMENT_STORAGE_KEY,
-      JSON.stringify(pendingPayment),
-    );
-  } catch {
-    // The in-memory state still lets the current page confirm the payment.
-  }
-}
-
-function restorePendingPayment(userId) {
-  let candidate;
-
-  try {
-    candidate = JSON.parse(
-      window.localStorage.getItem(PENDING_PAYMENT_STORAGE_KEY) || "null",
-    );
-  } catch {
-    clearStoredPendingPayment();
-    return null;
-  }
-
-  const checkoutUrl = readSecureCheckoutUrl(candidate?.checkoutUrl);
-  const createdAt = Number(candidate?.createdAt);
-  const paymentType = String(candidate?.paymentType || "");
-  const valid =
-    candidate &&
-    candidate.userId === userId &&
-    isUuid(candidate.paymentId) &&
-    isUuid(candidate.checkoutId) &&
-    checkoutUrl &&
-    (paymentType === "subscription" || paymentType === "poster_recharge") &&
-    Number.isFinite(createdAt) &&
-    Date.now() - createdAt >= 0 &&
-    Date.now() - createdAt <= PENDING_PAYMENT_MAX_AGE_MS;
-
-  if (!valid) {
-    clearStoredPendingPayment();
-    return null;
-  }
-
-  return {
-    ...candidate,
-    checkoutUrl: checkoutUrl.toString(),
-  };
-}
-
-function openCheckout(checkoutUrl, preparedWindow = null) {
-  const url = readSecureCheckoutUrl(checkoutUrl);
-
-  if (!url) {
-    throw new Error(
-      tr(
-        "L’URL du checkout Lemon Squeezy est invalide.",
-        "The Lemon Squeezy checkout URL is invalid.",
-      ),
-    );
-  }
-
-  if (preparedWindow && !preparedWindow.closed) {
-    preparedWindow.opener = null;
-    preparedWindow.location.replace(url.toString());
-    return;
-  }
-
-  const opened = window.open(url.toString(), "_blank", "noopener,noreferrer");
-  if (!opened) window.location.assign(url.toString());
-}
-
-async function readFunctionError(error) {
-  const context = error?.context;
-  if (context && typeof context.clone === "function") {
-    try {
-      const payload = await context.clone().json();
-      const serverMessage = String(payload?.error || "").trim();
-      if (serverMessage === "TEST_CHECKOUT_RESTRICTED") {
-        return tr(
-          "Le checkout test est réservé au compte Micolpe autorisé jusqu’à l’activation du store.",
-          "Test checkout is limited to the authorized Micolpe account until the store is activated.",
-        );
-      }
-      if (serverMessage) return serverMessage;
-    } catch {
-      // The response did not contain a JSON body.
-    }
-  }
-
-  return (
-    String(error?.message || error || "").trim() ||
-    tr("Impossible de préparer le paiement.", "Unable to prepare the payment.")
-  );
-}
-
-async function startPayment(paymentType, offer) {
-  if (portalState.paymentInProgress || !portalState.session?.user?.id) return;
-
-  if (!portalState.checkoutAllowed) {
-    setPaymentFeedback(
-      portalState.checkoutAccessError ? "error" : "notice",
-      portalState.checkoutAccessError
-        ? tr(
-            "L’accès au checkout ne peut pas être vérifié pour le moment.",
-            "Checkout access cannot be verified at the moment.",
-          )
-        : tr(
-            "Le checkout test est réservé au compte Micolpe autorisé jusqu’à l’activation du store.",
-            "Test checkout is limited to the authorized Micolpe account until the store is activated.",
-          ),
-    );
-    return;
-  }
-
-  if (paymentType === "poster_recharge" && isRenewalOnly()) {
-    setPaymentFeedback(
-      "notice",
-      tr(
-        "Renouvelez d’abord votre accès Micolpe avant d’acheter des crédits posters.",
-        "Renew your Micolpe access before buying poster credits.",
-      ),
-    );
-    return;
-  }
-
-  if (paymentType === "poster_recharge" && isTrialProfile()) {
-    setPaymentFeedback(
-      "notice",
-      tr(
-        "Activez d’abord votre abonnement Micolpe pour acheter des crédits posters.",
-        "Activate your Micolpe subscription before buying poster credits.",
-      ),
-    );
-    return;
-  }
-
-  if (portalState.pendingPayment) {
-    setPaymentFeedback(
-      "notice",
-      tr(
-        "Un checkout est déjà en cours. Finalisez-le avant de créer un autre paiement.",
-        "A checkout is already in progress. Complete it before creating another payment.",
-      ),
-    );
-    openCheckout(portalState.pendingPayment.checkoutUrl);
-    void confirmPendingPayment();
-    return;
-  }
-
-  // Open a blank tab synchronously from the click event to avoid popup
-  // blocking after the asynchronous Edge Function request.
-  const preparedWindow = window.open("about:blank", "_blank");
-
-  try {
-    portalState.paymentInProgress = true;
-    renderPayments();
-    setPaymentFeedback(
-      "info",
-      tr("Préparation du paiement sécurisé…", "Preparing secure payment…"),
-    );
-
-    const { data, error } = await supabase.functions.invoke(
-      "create_payment_session",
-      {
-        body: {
-          user_id: portalState.session.user.id,
-          payment_type: paymentType,
-          offer_id: offer.id,
-          locale: isEnglish ? "en" : "fr",
-        },
-      },
-    );
-
-    if (error) throw new Error(await readFunctionError(error));
-    if (data?.success !== true) {
-      throw new Error(
-        String(data?.error || "").trim() ||
-          tr(
-            "La session de paiement n’a pas pu être créée.",
-            "The payment session could not be created.",
-          ),
-      );
-    }
-
-    const provider = String(data.provider || "")
-      .trim()
-      .toLowerCase();
-    const checkoutId = String(data.checkout_id || "").trim();
-    const paymentId = String(data.payment_id || "").trim();
-    const checkoutUrl = readSecureCheckoutUrl(data.checkout_url);
-
-    if (
-      provider !== "lemonsqueezy" ||
-      !isUuid(checkoutId) ||
-      !isUuid(paymentId) ||
-      !checkoutUrl
-    ) {
-      throw new Error(
-        tr(
-          "La session Lemon Squeezy reçue est invalide.",
-          "The Lemon Squeezy session is invalid.",
-        ),
-      );
-    }
-
-    portalState.pendingPayment = {
-      userId: portalState.session.user.id,
-      paymentId,
-      checkoutId,
-      checkoutUrl: checkoutUrl.toString(),
-      paymentType,
-      createdAt: Date.now(),
-      previousSubscriptionEnd: String(
-        portalState.profile?.subscription_end || "",
-      ),
-      previousPosterBalance: Number(portalState.posterBalance) || 0,
-    };
-
-    storePendingPayment(portalState.pendingPayment);
-    portalState.paymentInProgress = false;
-    renderPayments();
-    setPaymentFeedback(
-      "info",
-      tr(
-        "Le checkout sécurisé Lemon Squeezy est ouvert. Cette page vérifiera automatiquement l’activation à votre retour.",
-        "The secure Lemon Squeezy checkout is open. This page will automatically verify activation when you return.",
-      ),
-    );
-    openCheckout(checkoutUrl.toString(), preparedWindow);
-    void confirmPendingPayment();
-  } catch (error) {
-    if (preparedWindow && !preparedWindow.closed) preparedWindow.close();
-    portalState.paymentInProgress = false;
-    portalState.confirmationInProgress = false;
-    portalState.pendingPayment = null;
-    renderPayments();
-    setPaymentFeedback("error", await readFunctionError(error));
-  }
-}
-
-async function refreshPaymentState(pendingPayment) {
-  const userId = portalState.session.user.id;
-  const [profileResult, walletResult, paymentResult] = await Promise.all([
-    supabase
-      .from("profile")
-      .select(
-        "id,name,email,phone,is_verified,is_active,is_trial,subscription_type,subscription_start,subscription_end,created_at,last_login",
-      )
-      .eq("id", userId)
-      .maybeSingle(),
-    supabase
-      .from("poster_wallets")
-      .select("balance")
-      .eq("profile_id", userId)
-      .maybeSingle(),
-    supabase
-      .from("payment")
-      .select("id,status,applied_at")
-      .eq("id", pendingPayment.paymentId)
-      .eq("user_id", userId)
-      .maybeSingle(),
-  ]);
-
-  if (!profileResult.error && profileResult.data) {
-    portalState.profile = profileResult.data;
-  }
-  if (!walletResult.error) {
-    portalState.posterBalance = Number(walletResult.data?.balance) || 0;
-  }
-
-  const paymentApplied =
-    !paymentResult.error &&
-    paymentResult.data?.status === "paid" &&
-    Boolean(paymentResult.data?.applied_at);
-  const subscriptionChanged =
-    pendingPayment.paymentType === "subscription" &&
-    String(portalState.profile?.subscription_end || "") !==
-      pendingPayment.previousSubscriptionEnd;
-  const posterBalanceChanged =
-    pendingPayment.paymentType === "poster_recharge" &&
-    Number(portalState.posterBalance) > pendingPayment.previousPosterBalance;
-
-  return {
-    applied: paymentApplied || subscriptionChanged || posterBalanceChanged,
-    status: String(paymentResult.data?.status || "").toLowerCase(),
-  };
-}
-
-async function confirmPendingPayment() {
-  const pendingPayment = portalState.pendingPayment;
-  if (!pendingPayment || portalState.confirmationInProgress) return;
-
-  portalState.confirmationInProgress = true;
-  setPaymentFeedback(
-    "info",
-    tr(
-      "Vérification de la confirmation Lemon Squeezy en cours…",
-      "Checking Lemon Squeezy confirmation…",
-    ),
-  );
-
-  let applied = false;
-  let paymentStatus = "";
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    try {
-      const result = await refreshPaymentState(pendingPayment);
-      applied = result.applied;
-      paymentStatus = result.status;
-      if (applied) break;
-    } catch {
-      // A later attempt may succeed while the webhook finishes processing.
-    }
-    if (attempt < 9) await delay(1500);
-  }
-
-  portalState.paymentInProgress = false;
-  portalState.confirmationInProgress = false;
-  if (!isRenewalOnly()) {
-    renderSummary();
-    renderProfile();
-  }
-
-  if (applied) {
-    portalState.pendingPayment = null;
-    clearStoredPendingPayment();
-    renderPayments();
-    setPaymentFeedback(
-      "success",
-      pendingPayment.paymentType === "subscription"
-        ? tr(
-            `Abonnement confirmé. Votre accès est valable jusqu’au ${formatDate(portalState.profile.subscription_end, true)}.`,
-            `Subscription confirmed. Your access is valid until ${formatDate(portalState.profile.subscription_end, true)}.`,
-          )
-        : tr(
-            `Recharge confirmée. Votre solde est maintenant de ${portalState.posterBalance} crédits.`,
-            `Recharge confirmed. Your balance is now ${portalState.posterBalance} credits.`,
-          ),
-    );
-
-    if (isRenewalOnly() && pendingPayment.paymentType === "subscription") {
-      const dashboardPath = isEnglish
-        ? "/en/dashboard.html"
-        : "/dashboard.html";
-      window.setTimeout(() => {
-        window.location.replace(`${dashboardPath}#overview`);
-      }, 1800);
-    }
-  } else if (
-    ["failed", "refunded", "cancelled", "canceled"].includes(paymentStatus)
-  ) {
-    portalState.pendingPayment = null;
-    clearStoredPendingPayment();
-    renderPayments();
-    setPaymentFeedback(
-      "error",
-      tr(
-        "Ce paiement n’a pas été finalisé. Vous pouvez recommencer avec un nouveau checkout.",
-        "This payment was not completed. You can start again with a new checkout.",
-      ),
-    );
-  } else {
-    renderPayments();
-    setPaymentFeedback(
-      "notice",
-      tr(
-        "Aucun paiement confirmé pour le moment. Finalisez le checkout Lemon Squeezy ; la vérification reprendra automatiquement à votre retour.",
-        "No payment has been confirmed yet. Complete the Lemon Squeezy checkout; verification will resume automatically when you return.",
-      ),
-    );
-  }
 }
 
 async function initializePaymentExperience() {
   renderPayments();
-  if (
-    portalState.paymentCatalogError ||
-    portalState.checkoutAccessError ||
-    !portalState.checkoutAllowed
-  ) {
-    clearStoredPendingPayment();
-    return;
-  }
-
-  portalState.pendingPayment = restorePendingPayment(
-    portalState.session.user.id,
-  );
-
-  if (portalState.pendingPayment) {
-    setPaymentFeedback(
-      "info",
-      tr(
-        "Vérification du dernier checkout Lemon Squeezy…",
-        "Checking the latest Lemon Squeezy checkout…",
-      ),
-    );
-    await confirmPendingPayment();
-  }
 }
 
 function renderLoft() {
@@ -1033,6 +359,126 @@ function renderLoft() {
     "loft-language",
     languageLabels[String(loft.lang || "").toLowerCase()] || loft.lang,
   );
+}
+
+function setLoftFormValue(id, value) {
+  const input = document.querySelector(`#${id}`);
+  if (input) input.value = value === null || value === undefined ? "" : String(value);
+}
+
+function populateLoftForm() {
+  const loft = portalState.loft || {};
+  setLoftFormValue("loft-form-name", loft.nameloft);
+  setLoftFormValue("loft-form-address", loft.addressloft);
+  setLoftFormValue("loft-form-phone", loft.phone);
+  setLoftFormValue("loft-form-email", loft.email || portalState.profile?.email);
+  setLoftFormValue("loft-form-website", loft.website);
+  setLoftFormValue("loft-form-social", loft.social);
+  setLoftFormValue("loft-form-latitude", loft.latitude);
+  setLoftFormValue("loft-form-longitude", loft.longitude);
+  setLoftFormValue("loft-form-language", languageLabels[String(loft.lang || "").toLowerCase()] ? String(loft.lang).toLowerCase() : (isEnglish ? "en" : "fr"));
+}
+
+function setLoftFeedback(message = "", type = "info") {
+  const feedback = document.querySelector("#loft-feedback");
+  if (!feedback) return;
+  feedback.textContent = message;
+  feedback.className = `loft-feedback ${type}`;
+  feedback.hidden = !message;
+}
+
+function openLoftEditor() {
+  populateLoftForm();
+  setLoftFeedback();
+  const card = document.querySelector("#loft-edit-card");
+  card.hidden = false;
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector("#loft-form-name")?.focus({ preventScroll: true });
+}
+
+function closeLoftEditor() {
+  document.querySelector("#loft-edit-card").hidden = true;
+  setLoftFeedback();
+  document.querySelector("#loft-edit-button")?.focus();
+}
+
+function parseLoftCoordinate(id, minimum, maximum, label) {
+  const raw = String(document.querySelector(`#${id}`)?.value || "").trim();
+  if (!raw) return null;
+  const value = Number(raw.replace(",", "."));
+  if (!Number.isFinite(value) || value < minimum || value > maximum) {
+    throw new Error(tr(
+      `${label} doit être comprise entre ${minimum} et ${maximum}.`,
+      `${label} must be between ${minimum} and ${maximum}.`,
+    ));
+  }
+  return value;
+}
+
+async function saveLoftChanges(event) {
+  event.preventDefault();
+  const form = document.querySelector("#loft-edit-form");
+  if (!form.reportValidity()) return;
+  const saveButton = document.querySelector("#loft-save-button");
+  const cancelButton = document.querySelector("#loft-cancel-button");
+  saveButton.disabled = true;
+  cancelButton.disabled = true;
+  saveButton.textContent = tr("Enregistrement…", "Saving…");
+  setLoftFeedback(tr("Enregistrement du loft…", "Saving loft…"), "info");
+
+  try {
+    const userId = portalState.session?.user?.id;
+    if (!userId) throw new Error(tr("Session utilisateur introuvable.", "User session not found."));
+    const payload = {
+      nameloft: String(document.querySelector("#loft-form-name").value || "").trim(),
+      addressloft: String(document.querySelector("#loft-form-address").value || "").trim(),
+      phone: String(document.querySelector("#loft-form-phone").value || "").trim(),
+      email: String(document.querySelector("#loft-form-email").value || "").trim(),
+      website: String(document.querySelector("#loft-form-website").value || "").trim(),
+      social: String(document.querySelector("#loft-form-social").value || "").trim(),
+      latitude: parseLoftCoordinate("loft-form-latitude", -90, 90, tr("La latitude", "Latitude")),
+      longitude: parseLoftCoordinate("loft-form-longitude", -180, 180, tr("La longitude", "Longitude")),
+      lang: document.querySelector("#loft-form-language").value,
+      updated_at: new Date().toISOString(),
+    };
+
+    let result;
+    if (portalState.loft?.id) {
+      result = await supabase
+        .from("loft")
+        .update(payload)
+        .eq("id", portalState.loft.id)
+        .eq("user_id", userId)
+        .select(LOFT_FIELDS)
+        .single();
+    } else {
+      result = await supabase
+        .from("loft")
+        .insert({
+          ...payload,
+          id: crypto.randomUUID(),
+          user_id: userId,
+          logo: "",
+          confirmed: true,
+        })
+        .select(LOFT_FIELDS)
+        .single();
+    }
+    if (result.error) throw result.error;
+
+    portalState.loft = { ...(portalState.loft || {}), ...result.data };
+    renderLoft();
+    renderSummary();
+    populateLoftForm();
+    setLoftFeedback(tr("Les données du loft sont enregistrées.", "Loft details have been saved."), "success");
+  } catch (error) {
+    console.error("Micolpe loft save failed", error);
+    setLoftFeedback(error.message || tr("Impossible d’enregistrer le loft.", "Unable to save loft."), "error");
+  } finally {
+    saveButton.disabled = false;
+    cancelButton.disabled = false;
+    saveButton.textContent = tr("Enregistrer", "Save");
+  }
 }
 
 function createTextCell(primary, secondary = "") {
@@ -1513,7 +959,7 @@ function renderPigeons() {
       const membership = pigeon.membership || {};
       const row = document.createElement("tr");
       row.append(
-        createTextCell(formatRing(pigeon), valueOrFallback(pigeon.country, "")),
+        createTextCell(formatRing(pigeon), pigeonDisplayName(pigeon)),
         createTextCell(membership.custom_name || pigeon.name_pigeon),
         createTextCell(formatRing(pigeonById(pigeon.father_id))),
         createTextCell(formatRing(pigeonById(pigeon.mother_id))),
@@ -1547,10 +993,19 @@ function renderPigeons() {
 
       const actionButton = document.createElement("button");
       actionButton.type = "button";
-      actionButton.className = "btn secondary small future-action";
-      actionButton.disabled = true;
-      actionButton.title = tr("Disponible prochainement", "Available soon");
+      actionButton.className = "btn primary small";
       actionButton.textContent = tr("Modifier", "Edit");
+      actionButton.setAttribute(
+        "aria-label",
+        tr(
+          `Modifier ${formatRing(pigeon)} dans Fast Pedigree`,
+          `Edit ${formatRing(pigeon)} in Fast Pedigree`,
+        ),
+      );
+      actionButton.addEventListener("click", () => {
+        const target = isEnglish ? "/en/fast-pedigree-user.html" : "/fast-pedigree-user.html";
+        window.location.href = `${target}?pigeon=${encodeURIComponent(pigeon.id)}`;
+      });
       actionCell.append(previewButton, actionButton);
       row.append(actionCell);
       fragment.append(row);
@@ -1611,8 +1066,8 @@ function configurePortalAccessMode() {
   const portalIntro = document.querySelector("#portal-intro");
   if (portalIntro && renewalOnly) {
     portalIntro.textContent = tr(
-      "Votre accès est expiré. Renouvelez-le pour retrouver toutes les sections de votre espace.",
-      "Your access has expired. Renew it to reopen every section of your account.",
+      "Votre accès est expiré. La préparation du service sécurisé est en cours.",
+      "Your access has expired. The secure service is being prepared.",
     );
   }
 }
@@ -1634,11 +1089,8 @@ function renderPortal(data) {
   document.querySelector("#portal-loading").hidden = true;
   document.querySelector("#portal-error").hidden = true;
   document.querySelector("#portal-sections").hidden = false;
-  const returnedFromPayment = new URLSearchParams(window.location.search).has(
-    "payment",
-  );
   showSection(
-    isRenewalOnly() || returnedFromPayment
+    isRenewalOnly()
       ? "payments"
       : window.location.hash.replace("#", "") || "overview",
   );
@@ -1659,19 +1111,6 @@ function showPortalError(message) {
 }
 
 function bindInteractions() {
-  const verifyPendingPaymentOnReturn = () => {
-    if (
-      portalState.pendingPayment &&
-      !portalState.confirmationInProgress &&
-      document.visibilityState === "visible"
-    ) {
-      void confirmPendingPayment();
-    }
-  };
-
-  window.addEventListener("focus", verifyPendingPaymentOnReturn);
-  document.addEventListener("visibilitychange", verifyPendingPaymentOnReturn);
-
   document.querySelectorAll("[data-section-target]").forEach((button) => {
     button.addEventListener("click", () => {
       showSection(button.dataset.sectionTarget);
@@ -1681,6 +1120,10 @@ function bindInteractions() {
   document.querySelectorAll("[data-open-payments]").forEach((button) => {
     button.addEventListener("click", () => showSection("payments"));
   });
+
+  document.querySelector("#loft-edit-button")?.addEventListener("click", openLoftEditor);
+  document.querySelector("#loft-cancel-button")?.addEventListener("click", closeLoftEditor);
+  document.querySelector("#loft-edit-form")?.addEventListener("submit", saveLoftChanges);
 
   for (const filterId of [
     "pigeon-ring-search",
@@ -1770,36 +1213,20 @@ async function initializePortal() {
             pigeonCount: 0,
           }
         : await loadPortalData(authState.session, authState.profile);
-    let paymentData;
-    let checkoutAccess;
+    let activationData;
 
     try {
-      paymentData = await loadPaymentData(authState.session.user.id);
-    } catch (paymentError) {
-      console.error("Micolpe payment catalog unavailable", paymentError);
-      paymentData = {
-        plans: [],
-        posterOffers: [],
+      activationData = await loadActivationData(authState.session.user.id);
+    } catch (activationError) {
+      console.error("Micolpe activation data unavailable", activationError);
+      activationData = {
         posterBalance: 0,
-        paymentCatalogError: paymentError,
-      };
-    }
-
-    try {
-      checkoutAccess = await loadCheckoutAccess();
-    } catch (checkoutAccessError) {
-      console.error("Micolpe checkout access unavailable", checkoutAccessError);
-      checkoutAccess = {
-        checkoutAllowed: false,
-        checkoutTestMode: true,
-        checkoutAccessError,
       };
     }
 
     renderPortal({
       ...data,
-      ...paymentData,
-      ...checkoutAccess,
+      ...activationData,
       session: authState.session,
       accessMode: authState.accessMode,
     });
