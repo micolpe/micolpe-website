@@ -132,3 +132,11 @@
 .fp-editor-node.is-scan-missing:not(.is-invalid){border:2px dashed #dc8700;background:linear-gradient(#fff8e8,#fff3cf)}
 .fp-editor-node.is-scan-missing .fp-node-index{background:#dc8700;color:#fff}
 @keyframes fp-scan-spin{to{transform:rotate(360deg)}}
+
+/* Visible deployment diagnostic while the Fast Pedigree module is loading. */
+.fp-module-placeholder{opacity:0;min-height:150px;display:grid;align-content:center;justify-items:center;gap:7px;padding:24px;color:#526176;text-align:center;animation:fp-module-placeholder-show 0s 1.5s forwards}
+.fp-module-placeholder strong{color:var(--fp-navy);font-size:15px}
+.fp-module-placeholder small{max-width:430px;font-size:11px}
+.fp-editor-tree>.fp-module-placeholder{flex:1 0 100%}
+.fp-paper>.fp-module-placeholder{grid-row:1/-1;min-height:100%}
+@keyframes fp-module-placeholder-show{to{opacity:1}}
