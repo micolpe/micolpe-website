@@ -1,6 +1,6 @@
 import { requireActiveSession } from "./auth-guard.js";
 import { supabase } from "./supabase-client.js";
-import { createPedigree, genderFor, genderSymbolForStorage, intermediateMissingIndexes, normalizeGender, parseRing, pedigreePersistencePlan } from "./fast-pedigree-core.js?v=20260814-14";
+import { createPedigree, genderFor, genderSymbolForStorage, intermediateMissingIndexes, normalizeGender, parseRing, pedigreePersistencePlan } from "./fast-pedigree-core.js?v=20260814-15";
 
 const PF = "id,ring,ring_number,ring_year,ring_suffix,country,fancier,gender,name_pigeon,color,father_id,mother_id,profile_id,updated_at";
 const LF = "id,pigeon_id,loft_id,is_owner,is_creator,is_deleted,custom_name,custom_fancier,custom_color,achievements,frame_color,photo,state,updated_at";

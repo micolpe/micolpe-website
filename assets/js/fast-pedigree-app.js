@@ -13,14 +13,14 @@ import {
   restoreTemporaryState,
   serializeTemporaryState,
   visibleGeneration,
-} from "./fast-pedigree-core.js?v=20260814-14";
+} from "./fast-pedigree-core.js?v=20260814-15";
 import {
   exportPreviewImage,
   exportPreviewPdf,
   renderPreview,
   sharePreview,
-} from "./fast-pedigree-renderer.js?v=20260814-14";
-import { FastPedigreeScanner } from "./fast-pedigree-scan.js?v=20260814-14";
+} from "./fast-pedigree-renderer.js?v=20260814-15";
+import { FastPedigreeScanner } from "./fast-pedigree-scan.js?v=20260814-15";
 
 const root = document.querySelector("#fast-pedigree-app");
 const lang = root.dataset.lang === "en" ? "en" : "fr";
@@ -605,7 +605,7 @@ async function init() {
 
   if (!authenticated) return;
   try {
-    const { FastPedigreeSupabase } = await import("./fast-pedigree-supabase.js?v=20260814-14");
+    const { FastPedigreeSupabase } = await import("./fast-pedigree-supabase.js?v=20260814-15");
     state.adapter = new FastPedigreeSupabase(lang);
     const data = await state.adapter.initialize();
     if (!data) return;

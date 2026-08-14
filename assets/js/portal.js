@@ -991,8 +991,7 @@ function renderPigeons() {
         openPedigreePreview(pigeon),
       );
 
-      const actionButton = document.createElement("button");
-      actionButton.type = "button";
+      const actionButton = document.createElement("a");
       actionButton.className = "btn primary small";
       actionButton.textContent = tr("Modifier", "Edit");
       actionButton.setAttribute(
@@ -1002,10 +1001,8 @@ function renderPigeons() {
           `Edit ${formatRing(pigeon)} in Fast Pedigree`,
         ),
       );
-      actionButton.addEventListener("click", () => {
-        const target = isEnglish ? "/en/fast-pedigree-user.html" : "/fast-pedigree-user.html";
-        window.location.href = `${target}?pigeon=${encodeURIComponent(pigeon.id)}`;
-      });
+      const target = isEnglish ? "/en/fast-pedigree-user.html" : "/fast-pedigree-user.html";
+      actionButton.href = `${target}?pigeon=${encodeURIComponent(pigeon.id)}`;
       actionCell.append(previewButton, actionButton);
       row.append(actionCell);
       fragment.append(row);

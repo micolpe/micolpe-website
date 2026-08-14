@@ -1,4 +1,4 @@
-import { branchIndexes, generationOf, parsePigeonText } from "./fast-pedigree-core.js?v=20260814-14";
+import { branchIndexes, generationOf, parsePigeonText } from "./fast-pedigree-core.js?v=20260814-15";
 
 const LIMIT = 2;
 const usage = () => { try { const data = JSON.parse(localStorage.getItem("micolpe-fp-ocr") || "{}"); return data.day === new Date().toISOString().slice(0, 10) ? Number(data.count || 0) : 0; } catch { return 0; } };
