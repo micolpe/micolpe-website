@@ -8,8 +8,8 @@
       content="Créez, scannez, personnalisez et exportez un pedigree de pigeon sur 4 générations."
     />
     <title>Fast Pedigree – Micolpe</title>
-    <link rel="stylesheet" href="assets/css/style.css" />
-    <link rel="stylesheet" href="assets/css/fast-pedigree.css?v=20260814-14" />
+    <link rel="stylesheet" href="/assets/css/style.css?v=20260814-15" />
+    <link rel="stylesheet" href="/assets/css/fast-pedigree.css?v=20260814-15" />
     <link rel="icon" href="assets/img/logo.png" />
   </head>
   <body class="fp-page">
@@ -103,7 +103,12 @@
             </div>
           </header>
           <div class="fp-editor-scroll">
-            <div id="fp-editor-tree" class="fp-editor-tree"></div>
+            <div id="fp-editor-tree" class="fp-editor-tree">
+              <div class="fp-module-placeholder">
+                <strong>Chargement de Fast Pedigree…</strong>
+                <small>Si ce message persiste, les fichiers du module ne sont pas disponibles sur le serveur.</small>
+              </div>
+            </div>
           </div>
           <aside class="fp-node-editor">
             <div class="fp-node-toolbar">
@@ -199,7 +204,12 @@
           </details>
           <div class="fp-paper-viewport">
             <div id="fp-paper-stage" class="fp-paper-stage">
-              <article id="fp-paper" class="fp-paper"></article>
+              <article id="fp-paper" class="fp-paper">
+                <div class="fp-module-placeholder">
+                  <strong>Préparation du Preview…</strong>
+                  <small>Le Preview apparaîtra dès que Fast Pedigree sera chargé.</small>
+                </div>
+              </article>
             </div>
           </div>
           <div class="fp-export-actions">
@@ -304,9 +314,9 @@
         </section>
       </div>
     </main>
-    <script src="assets/js/supabase-config.js"></script>
-    <script src="assets/vendor/html2canvas.min.js"></script>
-    <script src="assets/vendor/jspdf.umd.min.js"></script>
-    <script type="module" src="assets/js/fast-pedigree-app.js?v=20260814-14"></script>
+    <script src="/assets/js/supabase-config.js"></script>
+    <script src="/assets/vendor/html2canvas.min.js"></script>
+    <script src="/assets/vendor/jspdf.umd.min.js"></script>
+    <script type="module" src="/assets/js/fast-pedigree-app.js?v=20260814-15"></script>
   </body>
 </html>
