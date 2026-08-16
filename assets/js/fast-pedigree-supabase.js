@@ -1,6 +1,6 @@
 import { requireActiveSession } from "./auth-guard.js";
 import { supabase } from "./supabase-client.js";
-import { createPedigree, genderFor, genderSymbolForStorage, intermediateMissingIndexes, normalizeGender, parseRing, pedigreePersistencePlan } from "./fast-pedigree-core.js?v=20260814-15";
+import { createPedigree, genderFor, genderSymbolForStorage, intermediateMissingIndexes, normalizeGender, parseRing, pedigreePersistencePlan } from "./fast-pedigree-core.js?v=20260816-1";
 
 const PF = "id,ring,ring_number,ring_year,ring_suffix,country,fancier,gender,name_pigeon,color,father_id,mother_id,profile_id,updated_at";
 const LF = "id,pigeon_id,loft_id,is_owner,is_creator,is_deleted,custom_name,custom_fancier,custom_color,achievements,frame_color,photo,state,updated_at";
@@ -40,20 +40,38 @@ export class FastPedigreeSupabase {
     return { profile: this.profile, loft: this.loft, settings: this.settings, pigeons: this.pigeons.map((p) => ({ ...p, membership: this.membershipByPigeon.get(p.id) || null })) };
   }
   async loadPedigree(rootId) {
-    const rootGender = normalizeGender(this.pigeons.find((p) => p.id === rootId)?.gender), nodes = createPedigree(rootGender), byIndex = new Map([[1, rootId]]), byId = new Map();
-    for (let gen = 1; gen <= 5; gen += 1) {
+    const rootGender = normalizeGender(this.pigeons.find((p) => p.id === rootId)?.gender);
+    const nodes = createPedigree(rootGender);
+    Object.assign(nodes, await this.loadPedigreeBranch(rootId, 1, rootGender));
+    return nodes;
+  }
+  async loadPedigreeBranch(rootId, startIndex, rootGender) {
+    const normalizedStart = Number(startIndex);
+    const byIndex = new Map([[normalizedStart, rootId]]), byId = new Map();
+    const startGeneration = Math.floor(Math.log2(normalizedStart)) + 1;
+    for (let gen = startGeneration; gen <= 5; gen += 1) {
       const entries = [...byIndex].filter(([index]) => Math.floor(Math.log2(index)) + 1 === gen), missing = [...new Set(entries.map(([, id]) => id).filter((id) => id && !byId.has(id)))];
       if (missing.length) { const result = await supabase.from("pigeon").select(PF).in("id", missing); if (result.error) throw result.error; for (const p of result.data || []) byId.set(p.id, p); }
       for (const [index, id] of entries) { const p = byId.get(id); if (!p) continue; if (index * 2 <= 31 && p.father_id) byIndex.set(index * 2, p.father_id); if (index * 2 + 1 <= 31 && p.mother_id) byIndex.set(index * 2 + 1, p.mother_id); }
     }
     if (byId.size) { const result = await supabase.from("loft_pigeon").select(LF).eq("loft_id", this.loft.id).in("pigeon_id", [...byId.keys()]).eq("is_deleted", false); if (result.error) throw result.error; for (const m of result.data || []) this.membershipByPigeon.set(m.pigeon_id, m); }
+    const nodes = {};
     for (const [index, id] of byIndex) if (byId.get(id)) nodes[index] = toNode(byId.get(id), this.membershipByPigeon.get(id), index, rootGender, this.profile.id);
     return nodes;
   }
   async duplicates(node) {
     const parts = parseRing(node.ring), gender = genderFor(node.index, node.gender); if (!parts) return [];
-    const result = await supabase.from("pigeon").select(PF).eq("profile_id", this.profile.id).eq("core_id_loose", parts.core_id_loose).in("gender", gender === "M" ? ["M", "♂"] : ["F", "♀"]).limit(10);
+    let query = supabase.from("pigeon").select(PF).eq("profile_id", this.profile.id).eq("core_id_loose", parts.core_id_loose);
+    if (gender === "M") query = query.in("gender", ["M", "♂"]);
+    if (gender === "F") query = query.in("gender", ["F", "♀"]);
+    const result = await query.order("updated_at", { ascending: false }).limit(10);
     if (result.error) throw result.error; return (result.data || []).filter((p) => p.id !== node.id).map((p) => ({ ...p, membership: this.membershipByPigeon.get(p.id) }));
+  }
+  async findExistingPigeon(node) {
+    const choices = await this.duplicates(node);
+    if (!choices.length) return null;
+    const normalizedRing = parseRing(node.ring)?.ring;
+    return choices.find((candidate) => parseRing(candidate.ring)?.ring === normalizedRing) || choices[0];
   }
   async savePedigree(nodes, resolveDuplicate) {
     const missing = intermediateMissingIndexes(nodes);

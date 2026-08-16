@@ -140,3 +140,18 @@
 .fp-editor-tree>.fp-module-placeholder{flex:1 0 100%}
 .fp-paper>.fp-module-placeholder{grid-row:1/-1;min-height:100%}
 @keyframes fp-module-placeholder-show{to{opacity:1}}
+
+/* Existing-pigeon lookup aligned with the Flutter/Python end-of-ring flow. */
+.fp-editor-node.is-checking-existing{border-color:#d59a20;box-shadow:0 0 0 3px #d59a2029}
+.fp-editor-node.is-checking-existing:after{content:"";position:absolute;right:5px;bottom:5px;width:11px;height:11px;border:2px solid #b87800;border-right-color:transparent;border-radius:50%;animation:fp-scan-spin .75s linear infinite}
+.fp-existing-confirm{position:fixed;z-index:130;inset:0;display:grid;place-items:center;padding:18px}
+.fp-existing-dialog{position:relative;width:min(520px,100%);padding:24px;border:1px solid #d8e0eb;border-radius:20px;background:#fff;color:var(--fp-navy);box-shadow:0 28px 90px #0006}
+.fp-existing-dialog h2{margin:4px 0 10px;font-size:22px}
+.fp-existing-dialog p{margin:8px 0;color:var(--fp-muted)}
+.fp-existing-dialog dl{display:grid;gap:7px;margin:16px 0;padding:12px 14px;border-radius:12px;background:#f4f7fb}
+.fp-existing-dialog dl div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px}
+.fp-existing-dialog dt{color:var(--fp-muted);font-size:12px;font-weight:800}
+.fp-existing-dialog dd{margin:0;overflow-wrap:anywhere;font-weight:850}
+.fp-existing-warning{padding:11px 13px;border-left:4px solid #d59a20;background:#fff7e6;color:#6e4a00!important;font-size:13px}
+.fp-existing-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+@media(max-width:560px){.fp-existing-dialog{padding:19px}.fp-existing-dialog dl div{grid-template-columns:1fr;gap:1px}.fp-existing-actions{display:grid;grid-template-columns:1fr 1fr}.fp-existing-actions .btn{width:100%;padding-inline:10px}}

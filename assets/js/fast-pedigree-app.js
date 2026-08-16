@@ -13,14 +13,14 @@ import {
   restoreTemporaryState,
   serializeTemporaryState,
   visibleGeneration,
-} from "./fast-pedigree-core.js?v=20260814-15";
+} from "./fast-pedigree-core.js?v=20260816-1";
 import {
   exportPreviewImage,
   exportPreviewPdf,
   renderPreview,
   sharePreview,
-} from "./fast-pedigree-renderer.js?v=20260814-15";
-import { FastPedigreeScanner } from "./fast-pedigree-scan.js?v=20260814-15";
+} from "./fast-pedigree-renderer.js?v=20260816-1";
+import { FastPedigreeScanner } from "./fast-pedigree-scan.js?v=20260816-1";
 
 const root = document.querySelector("#fast-pedigree-app");
 const lang = root.dataset.lang === "en" ? "en" : "fr";
@@ -44,6 +44,8 @@ const state = {
   adapter: null,
   objectUrls: new Set(),
   scanMissing: new Set(),
+  ringEditBaselines: new Map(),
+  existingLookupTokens: new Map(),
   preview: {
     generations: "auto",
     font: "roboto",
@@ -282,6 +284,124 @@ function markParentRelationDirty(index) {
   if (parentIndex >= 1 && state.nodes[parentIndex]) state.nodes[parentIndex].relationsDirty = true;
 }
 
+function setExistingLookupBusy(index, value) {
+  const nodeElement = el["editor-tree"].querySelector(`.fp-editor-node[data-index="${index}"]`);
+  nodeElement?.classList.toggle("is-checking-existing", value);
+  if (nodeElement) nodeElement.setAttribute("aria-busy", String(value));
+}
+
+function askExistingPigeon(candidate, index) {
+  const pigeonName = candidate.membership?.custom_name || candidate.name_pigeon || "—";
+  const overlay = document.createElement("div");
+  overlay.className = "fp-existing-confirm";
+  overlay.innerHTML = `<button class="fp-modal-backdrop" type="button" data-existing-no aria-label="${esc(tr("Fermer", "Close"))}"></button>
+    <section class="fp-existing-dialog" role="dialog" aria-modal="true" aria-labelledby="fp-existing-title">
+      <span class="eyebrow">${esc(tr("Pigeon existant", "Existing pigeon"))}</span>
+      <h2 id="fp-existing-title">${esc(tr("Cette bague existe déjà", "This ring already exists"))}</h2>
+      <p>${esc(tr(
+        `Un pigeon avec cette bague (${candidate.ring}) existe déjà dans votre loft.`,
+        `A pigeon with this ring (${candidate.ring}) already exists in your loft.`,
+      ))}</p>
+      <dl><div><dt>${esc(tr("Nom", "Name"))}</dt><dd>${esc(pigeonName)}</dd></div><div><dt>${esc(tr("Destination", "Destination"))}</dt><dd>${esc(relation(index))}</dd></div></dl>
+      <p class="fp-existing-warning">${esc(tr(
+        "Est-il le même pigeon ? Si oui, son pedigree remplacera les données actuellement présentes dans cette branche.",
+        "Is it the same pigeon? If yes, its pedigree will replace the data currently present in this branch.",
+      ))}</p>
+      <div class="fp-existing-actions"><button class="btn secondary" type="button" data-existing-no>${esc(tr("Non", "No"))}</button><button class="btn primary" type="button" data-existing-yes>${esc(tr("Oui, charger", "Yes, load"))}</button></div>
+    </section>`;
+  document.body.append(overlay);
+  document.body.classList.add("fp-modal-open");
+
+  return new Promise((resolve) => {
+    const finish = (answer) => {
+      document.removeEventListener("keydown", onKeyDown);
+      overlay.remove();
+      document.body.classList.remove("fp-modal-open");
+      resolve(answer);
+    };
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") finish(false);
+    };
+    overlay.querySelectorAll("[data-existing-no]").forEach((button) => button.addEventListener("click", () => finish(false), { once: true }));
+    overlay.querySelector("[data-existing-yes]").addEventListener("click", () => finish(true), { once: true });
+    document.addEventListener("keydown", onKeyDown);
+    overlay.querySelector("[data-existing-no]").focus();
+  });
+}
+
+function restorePreviousRing(index, baseline) {
+  const node = state.nodes[index];
+  const parsed = parseRing(baseline.ring);
+  node.ring = baseline.ring || "";
+  node.invalid = false;
+  node.dirty = baseline.dirty;
+  const parentIndex = Math.floor(Number(index) / 2);
+  if (parentIndex >= 1 && state.nodes[parentIndex]) state.nodes[parentIndex].relationsDirty = baseline.parentRelationsDirty;
+  if (parsed) Object.assign(node, parsed, { invalid: false, dirty: baseline.dirty });
+  renderAll();
+  select(index);
+}
+
+async function detectExistingRing(index, baseline) {
+  if (!authenticated || !state.adapter) return;
+  const node = state.nodes[index];
+  const lookupRing = node?.ring;
+  if (!lookupRing || !parseRing(lookupRing)) return;
+
+  const token = Symbol(`existing-${index}`);
+  state.existingLookupTokens.set(index, token);
+  setExistingLookupBusy(index, true);
+  try {
+    const candidate = await state.adapter.findExistingPigeon({ ...node });
+    if (state.existingLookupTokens.get(index) !== token || state.nodes[index]?.ring !== lookupRing || !candidate) return;
+
+    if (node.id) {
+      restorePreviousRing(index, baseline);
+      status(tr(
+        "Cette bague est déjà utilisée par un autre pigeon. La bague précédente a été restaurée.",
+        "This ring is already used by another pigeon. The previous ring has been restored.",
+      ), "error");
+      return;
+    }
+
+    const confirmed = await askExistingPigeon(candidate, index);
+    if (!confirmed || state.existingLookupTokens.get(index) !== token || state.nodes[index]?.ring !== lookupRing) return;
+
+    setExistingLookupBusy(index, true);
+    const loadedBranch = await state.adapter.loadPedigreeBranch(candidate.id, index, state.nodes[1].gender);
+    if (state.existingLookupTokens.get(index) !== token || !loadedBranch[index]) return;
+
+    state.nodes = clearBranch(state.nodes, index);
+    for (const [loadedIndex, loadedNode] of Object.entries(loadedBranch)) state.nodes[Number(loadedIndex)] = loadedNode;
+    for (const branchIndex of branchIndexes(index)) state.scanMissing.delete(branchIndex);
+    markParentRelationDirty(index);
+    state.selected = index;
+
+    if (index === 1) {
+      state.preview.photoUrl = state.nodes[1].photo || "";
+      state.preview.qrUrl = await state.adapter.verificationUrl(candidate.id);
+      if (el["pigeon-select"]) el["pigeon-select"].value = candidate.id;
+    }
+
+    renderAll();
+    el["editor-tree"].querySelector(`.fp-editor-node[data-index="${index}"]`)?.scrollIntoView({ block: "center", inline: "center" });
+    status(tr(
+      `Le pigeon ${candidate.ring} et son pedigree ont été chargés dans la branche ${relation(index)}.`,
+      `Pigeon ${candidate.ring} and its pedigree were loaded into the ${relation(index)} branch.`,
+    ), "success");
+  } catch (error) {
+    status(tr(
+      `Impossible de vérifier cette bague : ${error.message || error}`,
+      `Unable to check this ring: ${error.message || error}`,
+    ), "error");
+  } finally {
+    if (state.existingLookupTokens.get(index) === token) {
+      state.existingLookupTokens.delete(index);
+      setExistingLookupBusy(index, false);
+    }
+  }
+}
+
 function updateInlineNode(event) {
   const input = event.target.closest("[data-field]");
   if (!input) return;
@@ -290,12 +410,27 @@ function updateInlineNode(event) {
   const node = state.nodes[index];
   const field = input.dataset.field;
   const previousValue = node[field];
+  if (field === "ring" && event.type === "input" && !state.ringEditBaselines.has(index)) {
+    state.ringEditBaselines.set(index, {
+      ring: input.dataset.preservedRing || node.ring || "",
+      dirty: node.dirty,
+      parentRelationsDirty: state.nodes[Math.floor(index / 2)]?.relationsDirty || false,
+    });
+  }
+  const ringBaseline = field === "ring"
+    ? state.ringEditBaselines.get(index) || {
+        ring: input.dataset.preservedRing || "",
+        dirty: node.dirty,
+        parentRelationsDirty: state.nodes[Math.floor(index / 2)]?.relationsDirty || false,
+      }
+    : null;
   select(index);
   if (field === "ring" && !input.value.trim() && input.dataset.preservedRing && hasFilledDescendants(state.nodes, index)) {
     node.ring = input.dataset.preservedRing;
     node.invalid = false;
     input.value = input.dataset.preservedRing;
     refreshNodeState(index);
+    state.ringEditBaselines.delete(index);
     status(tr(
       "Impossible de vider cette bague : des pigeons sont renseignés dans sa branche. Utilisez « Vider la branche » pour les supprimer ensemble.",
       "This ring cannot be cleared because its branch contains pigeons. Use “Clear branch” to remove them together.",
@@ -314,6 +449,10 @@ function updateInlineNode(event) {
       Object.assign(node, parsed, { invalid: false });
       input.value = node.ring;
       input.dataset.preservedRing = node.ring;
+      state.ringEditBaselines.delete(index);
+      void detectExistingRing(index, ringBaseline);
+    } else if (event.type === "change") {
+      state.ringEditBaselines.delete(index);
     }
   }
 
@@ -605,7 +744,7 @@ async function init() {
 
   if (!authenticated) return;
   try {
-    const { FastPedigreeSupabase } = await import("./fast-pedigree-supabase.js?v=20260814-15");
+    const { FastPedigreeSupabase } = await import("./fast-pedigree-supabase.js?v=20260816-1");
     state.adapter = new FastPedigreeSupabase(lang);
     const data = await state.adapter.initialize();
     if (!data) return;

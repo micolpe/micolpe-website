@@ -77,6 +77,46 @@ a { color: inherit; text-decoration: none; }
 .links a:hover { color: var(--green); }
 .links a:hover::after { right: 0; }
 
+.mobile-site-menu {
+  position: relative;
+  display: none;
+}
+.mobile-site-menu summary {
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 8px 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--green);
+  font-weight: 850;
+  cursor: pointer;
+  list-style: none;
+}
+.mobile-site-menu summary::-webkit-details-marker { display: none; }
+.mobile-site-menu nav {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 9px);
+  right: 0;
+  width: min(270px, 84vw);
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+.mobile-site-menu nav a {
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #25382d;
+  font-weight: 780;
+}
+.mobile-site-menu nav a:hover { background: var(--soft); color: var(--green); }
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -361,11 +401,14 @@ h3 { margin: 18px 0 8px; font-size: 22px; line-height: 1.2; letter-spacing: -.02
 
 @media (max-width: 1040px) {
   .links { display: none; }
+  .mobile-site-menu { display: block; margin-left: auto; }
+  .nav.has-mobile-menu { gap: 12px; }
   .hero-grid { grid-template-columns: 1fr .62fr; }
   .features { grid-template-columns: repeat(2, 1fr); }
   .pricing { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 760px) {
+  .nav.has-mobile-menu > .btn.small { display: none; }
   .nav { min-height: 70px; }
   .brand img { width: 46px; height: 46px; }
   .brand { font-size: 22px; }

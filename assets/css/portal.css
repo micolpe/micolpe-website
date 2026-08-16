@@ -389,6 +389,10 @@
   text-decoration: none;
 }
 
+.portal-fast-pedigree-mobile {
+  display: none !important;
+}
+
 .portal-nav button:hover,
 .portal-nav button.active,
 .portal-nav a:hover {
@@ -1497,6 +1501,12 @@
   .portal-nav a {
     width: auto;
     flex: 0 0 auto;
+  }
+
+  .portal-nav .portal-fast-pedigree-mobile {
+    display: inline-flex !important;
+    color: #fff;
+    background: var(--green);
   }
 
   .portal-content {
