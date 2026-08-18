@@ -187,8 +187,65 @@ export function parseRing(value, now = new Date()) {
   return null;
 }
 
+const performanceResult = (line) => String(line || "").match(/^(\d{1,4})\s*[\/|]\s*(\d{1,6})$/);
+const normalizedPerformanceResult = (line) => {
+  const match = performanceResult(line);
+  return match ? `${match[1]}/${match[2]}` : String(line || "").trim();
+};
+const isPerformanceLabel = (line) => {
+  const value = String(line || "").trim();
+  return value.length <= 64
+    && /[A-Za-zÀ-ÿ]/.test(value)
+    && !performanceResult(value)
+    && !parseRing(value)
+    && !/[:=]\s*$/.test(value)
+    && !/^[=—–-]/.test(value);
+};
+
+export function reconstructOcrLines(text) {
+  const lines = String(text || "").split(/\r?\n/).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean);
+
+  // Some OCR engines read a two-column result block as every race name first,
+  // followed by every rank/participant value. Zip those equally sized groups.
+  let cursor = 0;
+  while (cursor < lines.length) {
+    if (!performanceResult(lines[cursor])) {
+      cursor += 1;
+      continue;
+    }
+    let end = cursor;
+    while (end < lines.length && performanceResult(lines[end])) end += 1;
+    const count = end - cursor;
+    const labelStart = cursor - count;
+    if (count >= 2 && labelStart >= 0) {
+      const labels = lines.slice(labelStart, cursor);
+      if (labels.every(isPerformanceLabel)) {
+        const results = lines.slice(cursor, end);
+        const pairs = labels.map((label, offset) => `${label} ${normalizedPerformanceResult(results[offset])}`);
+        lines.splice(labelStart, count * 2, ...pairs);
+        cursor = labelStart + pairs.length;
+        continue;
+      }
+    }
+    cursor = end;
+  }
+
+  // The usual OCR order alternates the race name and its result on two lines.
+  const rebuilt = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const next = lines[index + 1];
+    if (next && isPerformanceLabel(lines[index]) && performanceResult(next)) {
+      rebuilt.push(`${lines[index]} ${normalizedPerformanceResult(next)}`);
+      index += 1;
+    } else {
+      rebuilt.push(performanceResult(lines[index]) ? normalizedPerformanceResult(lines[index]) : lines[index]);
+    }
+  }
+  return rebuilt;
+}
+
 export function parsePigeonText(text, index, rootGender = "?") {
-  let lines = String(text || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  let lines = reconstructOcrLines(text);
   const result = emptyNode(index, rootGender);
   if (!lines.length) return result;
   if (lines.length > 1 && /^[A-Z](?:[^0-9\r\n]{0,6}[A-Z])?$/i.test(lines[0]) && parseRing(`${lines[0]} ${lines[1]}`)?.country) {

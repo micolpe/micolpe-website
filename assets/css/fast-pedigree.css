@@ -155,3 +155,9 @@
 .fp-existing-warning{padding:11px 13px;border-left:4px solid #d59a20;background:#fff7e6;color:#6e4a00!important;font-size:13px}
 .fp-existing-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
 @media(max-width:560px){.fp-existing-dialog{padding:19px}.fp-existing-dialog dl div{grid-template-columns:1fr;gap:1px}.fp-existing-actions{display:grid;grid-template-columns:1fr 1fr}.fp-existing-actions .btn{width:100%;padding-inline:10px}}
+
+/* Identical compact Preview spacing in visitor and member pages. */
+.fp-paper-body{gap:2px;padding:1.2% .6% 1.2% .2%}
+.fp-paper-generations,.fp-paper-generation:first-child{margin-left:0}
+.fp-paper-node{padding-left:2px}
+.fp-paper-photo{width:9%;flex:0 0 9%;margin-left:0}

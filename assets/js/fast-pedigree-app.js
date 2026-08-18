@@ -5,6 +5,7 @@ import {
   branchIndexes,
   clearBranch,
   createPedigree,
+  generationOf,
   genderFor,
   hasFilledDescendants,
   intermediateMissingIndexes,
@@ -13,14 +14,14 @@ import {
   restoreTemporaryState,
   serializeTemporaryState,
   visibleGeneration,
-} from "./fast-pedigree-core.js?v=20260816-1";
+} from "./fast-pedigree-core.js?v=20260819-2";
 import {
   exportPreviewImage,
   exportPreviewPdf,
   renderPreview,
   sharePreview,
-} from "./fast-pedigree-renderer.js?v=20260816-1";
-import { FastPedigreeScanner } from "./fast-pedigree-scan.js?v=20260816-1";
+} from "./fast-pedigree-renderer.js?v=20260819-2";
+import { FastPedigreeScanner } from "./fast-pedigree-scan.js?v=20260819-2";
 
 const root = document.querySelector("#fast-pedigree-app");
 const lang = root.dataset.lang === "en" ? "en" : "fr";
@@ -701,7 +702,12 @@ function bind(scanner) {
   el["preview-zoom-out"].addEventListener("click", () => changeZoom("preview", -0.1));
   el["preview-zoom-in"].addEventListener("click", () => changeZoom("preview", 0.1));
   document.querySelector("#fp-new-pedigree").addEventListener("click", newPedigree);
-  el["scan-selected"].addEventListener("click", () => scanner.open(state.selected, true));
+  el["scan-selected"].addEventListener("click", () => {
+    const editorGeneration = visibleGeneration(state.editorGenerations, state.nodes);
+    const scanStart = generationOf(state.selected) <= editorGeneration ? state.selected : 1;
+    if (scanStart !== state.selected) select(scanStart);
+    scanner.open(scanStart, true, editorGeneration);
+  });
   el["clear-branch"].addEventListener("click", eraseBranch);
   document.querySelector("#fp-logo-file").addEventListener("change", (event) => setImage("logoUrl", event.target.files[0]));
   document.querySelector("#fp-photo-file").addEventListener("change", (event) => setImage("photoUrl", event.target.files[0]));
@@ -744,7 +750,7 @@ async function init() {
 
   if (!authenticated) return;
   try {
-    const { FastPedigreeSupabase } = await import("./fast-pedigree-supabase.js?v=20260816-1");
+    const { FastPedigreeSupabase } = await import("./fast-pedigree-supabase.js?v=20260819-2");
     state.adapter = new FastPedigreeSupabase(lang);
     const data = await state.adapter.initialize();
     if (!data) return;

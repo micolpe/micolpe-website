@@ -884,6 +884,10 @@
   gap: 20px;
 }
 
+.payment-catalog-card[hidden] {
+  display: none;
+}
+
 .payment-catalog-heading {
   display: flex;
   align-items: flex-start;

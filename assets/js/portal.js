@@ -6,6 +6,12 @@ const PAGE_SIZE = 50;
 const LOFT_FIELDS = "id,nameloft,addressloft,phone,email,latitude,longitude,logo,social,lang,confirmed,website,updated_at";
 const isEnglish = document.documentElement.lang === "en";
 const tr = (fr, en) => (isEnglish ? en : fr);
+const returnedCheckoutId = new URLSearchParams(window.location.search).get(
+  "checkout_id",
+);
+const requestedPortalSection = new URLSearchParams(window.location.search).get(
+  "section",
+);
 const portalState = {
   session: null,
   profile: null,
@@ -319,10 +325,134 @@ function renderPayments() {
       : tr("Aucune date de fin renseignée", "No end date available"),
   );
   setText("payment-poster-balance", String(portalState.posterBalance), "0");
+
+  const isTrial = portalState.profile?.is_trial === true;
+
+  const trialNote = document.querySelector("#payment-trial-pack-note");
+  if (trialNote) trialNote.hidden = !isTrial;
+  document.querySelectorAll("[data-poster-pack]").forEach((button) => {
+    button.disabled = isTrial;
+    button.setAttribute("aria-disabled", String(isTrial));
+    button.title = isTrial
+      ? tr(
+          "Activez d’abord un abonnement Micolpe.",
+          "Activate a Micolpe access plan first.",
+        )
+      : "";
+  });
 }
 
 async function initializePaymentExperience() {
   renderPayments();
+
+  if (returnedCheckoutId) {
+    showPaymentFeedback(
+      "success",
+      tr(
+        "Commande Polar confirmée. La mise à jour de votre compte peut prendre quelques secondes ; actualisez cette page si nécessaire.",
+        "Polar order confirmed. Your account may take a few seconds to update; refresh this page if necessary.",
+      ),
+    );
+  }
+}
+
+function showPaymentFeedback(type, message) {
+  const feedback = document.querySelector("#payment-feedback");
+  if (!feedback) return;
+  feedback.className = `payment-feedback ${type}`;
+  feedback.textContent = message;
+  feedback.hidden = false;
+}
+
+async function startPolarCheckout(event) {
+  const button = event?.currentTarget;
+  const offer = String(button?.dataset?.polarOffer || "").trim();
+  if (!button || !offer || !portalState.session?.user?.id) return;
+
+  if (button.hasAttribute("data-poster-pack") && portalState.profile?.is_trial === true) {
+    showPaymentFeedback(
+      "error",
+      tr(
+        "Les packs Posters sont disponibles après l’activation complète du compte.",
+        "Poster packs are available after full account activation.",
+      ),
+    );
+    return;
+  }
+
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = tr("Ouverture…", "Opening…");
+  showPaymentFeedback(
+    "info",
+    tr(
+      "Préparation du checkout sécurisé Polar…",
+      "Preparing the secure Polar checkout…",
+    ),
+  );
+
+  try {
+    const accessToken = String(
+      portalState.session?.access_token || "",
+    ).trim();
+
+    if (!accessToken) {
+      throw new Error(
+        tr(
+          "Session expirée. Reconnectez-vous.",
+          "Session expired. Sign in again.",
+        ),
+      );
+    }
+
+    const { data, error } = await supabase.functions.invoke(
+      "create-polar-checkout",
+      {
+        body: {
+          locale: isEnglish ? "en" : "fr",
+          offer,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    );
+    
+    if (error) throw error;
+
+    const checkoutUrl = String(data?.checkout_url || "").trim();
+    const parsedCheckoutUrl = new URL(checkoutUrl);
+    const checkoutHost = parsedCheckoutUrl.hostname.toLowerCase();
+    const isPolarCheckout =
+      parsedCheckoutUrl.protocol === "https:" &&
+      (checkoutHost === "polar.sh" || checkoutHost.endsWith(".polar.sh"));
+    if (!isPolarCheckout) {
+      throw new Error("Invalid Polar checkout URL");
+    }
+
+    window.location.assign(checkoutUrl);
+  } catch (error) {
+    let serverMessage = "";
+    if (error?.context instanceof Response) {
+      try {
+        const payload = await error.context.clone().json();
+        serverMessage = String(payload?.error || "").trim();
+      } catch {
+        serverMessage = "";
+      }
+    }
+    console.error("Unable to open Polar checkout", error);
+    const diagnostic = serverMessage ? ` (${serverMessage})` : "";
+    showPaymentFeedback(
+      "error",
+      tr(
+        `Impossible d’ouvrir le paiement pour le moment${diagnostic}.`,
+        `Unable to open payment right now${diagnostic}.`,
+      ),
+    );
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
 }
 
 function renderLoft() {
@@ -1063,8 +1193,8 @@ function configurePortalAccessMode() {
   const portalIntro = document.querySelector("#portal-intro");
   if (portalIntro && renewalOnly) {
     portalIntro.textContent = tr(
-      "Votre accès est expiré. La préparation du service sécurisé est en cours.",
-      "Your access has expired. The secure service is being prepared.",
+      "Votre accès est expiré. Choisissez une formule ci-dessous pour le renouveler en ligne.",
+      "Your access has expired. Choose a plan below to renew it online.",
     );
   }
 }
@@ -1089,7 +1219,7 @@ function renderPortal(data) {
   showSection(
     isRenewalOnly()
       ? "payments"
-      : window.location.hash.replace("#", "") || "overview",
+      : requestedPortalSection || window.location.hash.replace("#", "") || "overview",
   );
 }
 
@@ -1116,6 +1246,10 @@ function bindInteractions() {
 
   document.querySelectorAll("[data-open-payments]").forEach((button) => {
     button.addEventListener("click", () => showSection("payments"));
+  });
+
+  document.querySelectorAll("[data-polar-offer]").forEach((button) => {
+    button.addEventListener("click", startPolarCheckout);
   });
 
   document.querySelector("#loft-edit-button")?.addEventListener("click", openLoftEditor);
