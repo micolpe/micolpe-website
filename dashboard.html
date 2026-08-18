@@ -8,11 +8,11 @@
     <meta http-equiv="Cache-Control" content="no-store" />
     <title>Mon espace – Micolpe</title>
     <meta
-      name="description"
+      name="description"portal.js?
       content="Espace privé Micolpe de consultation du profil, du loft, des appareils et des pigeons."
     />
     <link rel="stylesheet" href="assets/css/style.css" />
-    <link rel="stylesheet" href="assets/css/portal.css?v=20260814-15" />
+    <link rel="stylesheet" href="assets/css/portal.css?v=20260816-16" />
     <link rel="icon" href="assets/img/logo.png" />
   </head>
   <body class="portal-body">
@@ -44,7 +44,7 @@
             Mon profil
           </button>
           <button type="button" data-section-target="payments">
-            Activation
+            Paiements
           </button>
           <button type="button" data-section-target="loft">Mon loft</button>
           <button type="button" data-section-target="devices">
@@ -108,9 +108,8 @@
           >
             <strong>Votre accès Micolpe est expiré.</strong>
             <span
-              >Seule la section Activation reste accessible. La préparation du
-              paiement sécurisé est en cours. Contactez l’assistance si vous
-              avez besoin d’aide.</span
+              >Seule la section Paiements reste accessible afin d’activer ou de
+              prolonger votre accès.</span
             >
           </div>
 
@@ -272,8 +271,8 @@
           >
             <div class="section-heading">
               <div>
-                <h2>Activation</h2>
-                <p>Informations sur l’accès associé à votre compte Micolpe.</p>
+                <h2>Paiements</h2>
+                <p>Gérez votre accès Micolpe et vos crédits Poster IA.</p>
               </div>
             </div>
 
@@ -300,30 +299,41 @@
               </article>
             </div>
 
-            <article class="portal-card payment-catalog-card">
+            <article
+              class="portal-card payment-catalog-card"
+              id="polar-payment-panel"
+            >
               <div class="payment-catalog-heading">
                 <div>
-                  <span class="eyebrow">Bientôt disponible</span>
-                  <h3>Préparation du paiement sécurisé en cours</h3>
+                  <span class="eyebrow">Paiement en ligne</span>
+                  <h3>Abonnements Micolpe</h3>
                   <p>
-                    L’activation ou la prolongation en ligne est temporairement
-                    indisponible. Aucun bouton ne peut lancer d’opération depuis
-                    le site pendant cette préparation.
+                    Prolongez votre accès à partir de la date de fin actuelle
+                    grâce au paiement sécurisé.
                   </p>
                 </div>
+                <span class="payment-secure-badge">Paiement sécurisé par Polar</span>
               </div>
-              <div class="checkout-actions" style="justify-content: flex-start">
-                <a class="btn secondary small" href="contact.html"
-                  >Contacter l’assistance</a
-                >
+              <div class="payment-offer-grid" aria-label="Formules d’abonnement">
+                <article class="payment-offer-card"><h4>Accès 1 an</h4><strong class="payment-offer-price">15 €</strong><span class="payment-offer-price-note">Paiement unique</span><p>Une année ajoutée à votre période Micolpe restante.</p><button class="btn primary small payment-offer-button" type="button" data-polar-offer="access_1y">Choisir 1 an</button></article>
+                <article class="payment-offer-card"><h4>Accès 3 ans</h4><strong class="payment-offer-price">40 €</strong><span class="payment-offer-price-note">Paiement unique</span><p>Trois années ajoutées à votre période Micolpe restante.</p><button class="btn primary small payment-offer-button" type="button" data-polar-offer="access_3y">Choisir 3 ans</button></article>
+                <article class="payment-offer-card"><h4>Accès 5 ans</h4><strong class="payment-offer-price">60 €</strong><span class="payment-offer-price-note">Paiement unique</span><p>Cinq années ajoutées à votre période Micolpe restante.</p><button class="btn primary small payment-offer-button" type="button" data-polar-offer="access_5y">Choisir 5 ans</button></article>
+              </div>
+              <div class="payment-catalog-heading payment-poster-heading"><div><span class="eyebrow">Poster Studio IA</span><h3>Packs de générations</h3><p>Disponibles uniquement après activation complète du compte.</p></div></div>
+              <div class="portal-note payment-trial-note" id="payment-trial-pack-note" hidden>Les packs Posters ne peuvent pas être achetés pendant la période d’essai. Activez d’abord un abonnement Micolpe.</div>
+              <div class="payment-offer-grid" aria-label="Packs Posters IA">
+                <article class="payment-offer-card"><h4>10 Posters</h4><strong class="payment-offer-price">5 €</strong><span class="payment-offer-price-note">0,50 € par génération</span><p>Pour démarrer avec Poster Studio.</p><button class="btn secondary small payment-offer-button" type="button" data-polar-offer="posters_10" data-poster-pack>Choisir 10</button></article>
+                <article class="payment-offer-card"><h4>50 Posters</h4><strong class="payment-offer-price">20 €</strong><span class="payment-offer-price-note">0,40 € par génération</span><p>Pour une utilisation régulière.</p><button class="btn secondary small payment-offer-button" type="button" data-polar-offer="posters_50" data-poster-pack>Choisir 50</button></article>
+                <article class="payment-offer-card"><h4>100 Posters</h4><strong class="payment-offer-price">35 €</strong><span class="payment-offer-price-note">0,35 € par génération</span><p>Le meilleur tarif par génération.</p><button class="btn secondary small payment-offer-button" type="button" data-polar-offer="posters_100" data-poster-pack>Choisir 100</button></article>
               </div>
             </article>
 
             <div class="portal-note payment-legal-note">
-              <span>Les offres seront réactivées une fois le service prêt.</span>
+              <span>Les achats sont des services numériques liés à votre compte Micolpe.</span>
               <span
                 ><a href="terms.html">Conditions générales</a> ·
-                <a href="privacy.html">Confidentialité</a></span
+                <a href="privacy.html">Confidentialité</a> ·
+                <a href="refund.html">Remboursements</a></span
               >
             </div>
           </section>
@@ -686,6 +696,6 @@
       integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU"
       crossorigin="anonymous"
     ></script>
-    <script type="module" src="assets/js/portal.js?v=20260814-15"></script>
+    <script type="module" src="assets/js/portal.js?v=20260819-01"></script>
   </body>
 </html>

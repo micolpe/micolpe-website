@@ -12,7 +12,7 @@
       content="View your Micolpe profile, loft, devices, pigeons and pedigrees."
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
-    <link rel="stylesheet" href="../assets/css/portal.css?v=20260814-15" />
+    <link rel="stylesheet" href="../assets/css/portal.css?v=20260816-16" />
     <link rel="icon" href="../assets/img/logo.png" />
   </head>
   <body class="portal-body">
@@ -33,7 +33,7 @@
             Fast Pedigree</a
           ><button type="button" data-section-target="profile">
             My profile</button
-          ><button type="button" data-section-target="payments">Activation</button
+          ><button type="button" data-section-target="payments">Payments</button
           ><button type="button" data-section-target="loft">My loft</button
           ><button type="button" data-section-target="devices">
             My devices</button
@@ -89,8 +89,8 @@
           >
             <strong>Your Micolpe access has expired.</strong>
             <span
-              >Only the Activation section remains available. Secure payment
-              preparation is in progress. Contact support if you need help.</span
+              >Only the Payments section remains available so you can activate
+              or extend your access.</span
             >
           </div>
 
@@ -244,8 +244,8 @@
           >
             <div class="section-heading">
               <div>
-                <h2>Activation</h2>
-                <p>Information about the access linked to your Micolpe account.</p>
+                <h2>Payments</h2>
+                <p>Manage your Micolpe access and AI Poster credits.</p>
               </div>
             </div>
             <div
@@ -269,28 +269,40 @@
                 ><small>Credits available on your account</small>
               </article>
             </div>
-            <article class="portal-card payment-catalog-card">
+            <article
+              class="portal-card payment-catalog-card"
+              id="polar-payment-panel"
+            >
               <div class="payment-catalog-heading">
                 <div>
-                  <span class="eyebrow">Coming soon</span>
-                  <h3>Secure payment preparation is in progress</h3>
+                  <span class="eyebrow">Online payment</span>
+                  <h3>Micolpe access plans</h3>
                   <p>
-                    Online activation and extension are temporarily unavailable.
-                    No action can be started from the website during this work.
+                    Extend your access from its current end date through secure
+                    payment.
                   </p>
                 </div>
+                <span class="payment-secure-badge">Secure payment by Polar</span>
               </div>
-              <div class="checkout-actions" style="justify-content: flex-start">
-                <a class="btn secondary small" href="contact.html"
-                  >Contact support</a
-                >
+              <div class="payment-offer-grid" aria-label="Access plans">
+                <article class="payment-offer-card"><h4>1-year access</h4><strong class="payment-offer-price">€15</strong><span class="payment-offer-price-note">One-time payment</span><p>One year added to your remaining Micolpe access.</p><button class="btn primary small payment-offer-button" type="button" data-polar-offer="access_1y">Choose 1 year</button></article>
+                <article class="payment-offer-card"><h4>3-year access</h4><strong class="payment-offer-price">€40</strong><span class="payment-offer-price-note">One-time payment</span><p>Three years added to your remaining Micolpe access.</p><button class="btn primary small payment-offer-button" type="button" data-polar-offer="access_3y">Choose 3 years</button></article>
+                <article class="payment-offer-card"><h4>5-year access</h4><strong class="payment-offer-price">€60</strong><span class="payment-offer-price-note">One-time payment</span><p>Five years added to your remaining Micolpe access.</p><button class="btn primary small payment-offer-button" type="button" data-polar-offer="access_5y">Choose 5 years</button></article>
+              </div>
+              <div class="payment-catalog-heading payment-poster-heading"><div><span class="eyebrow">AI Poster Studio</span><h3>Generation packs</h3><p>Available only after full account activation.</p></div></div>
+              <div class="portal-note payment-trial-note" id="payment-trial-pack-note" hidden>Poster packs cannot be purchased during the trial period. Activate a Micolpe access plan first.</div>
+              <div class="payment-offer-grid" aria-label="AI Poster packs">
+                <article class="payment-offer-card"><h4>10 Posters</h4><strong class="payment-offer-price">€5</strong><span class="payment-offer-price-note">€0.50 per generation</span><p>Get started with Poster Studio.</p><button class="btn secondary small payment-offer-button" type="button" data-polar-offer="posters_10" data-poster-pack>Choose 10</button></article>
+                <article class="payment-offer-card"><h4>50 Posters</h4><strong class="payment-offer-price">€20</strong><span class="payment-offer-price-note">€0.40 per generation</span><p>For regular Poster Studio use.</p><button class="btn secondary small payment-offer-button" type="button" data-polar-offer="posters_50" data-poster-pack>Choose 50</button></article>
+                <article class="payment-offer-card"><h4>100 Posters</h4><strong class="payment-offer-price">€35</strong><span class="payment-offer-price-note">€0.35 per generation</span><p>The best rate per generation.</p><button class="btn secondary small payment-offer-button" type="button" data-polar-offer="posters_100" data-poster-pack>Choose 100</button></article>
               </div>
             </article>
             <div class="portal-note payment-legal-note">
-              <span>The offers will return when the service is ready.</span
+              <span>Purchases are digital services linked to your Micolpe account.</span
               ><span
                 ><a href="terms.html">Terms</a> ·
-                <a href="privacy.html">Privacy</a></span
+                <a href="privacy.html">Privacy</a> ·
+                <a href="refund.html">Refunds</a></span
               >
             </div>
           </section>
@@ -626,6 +638,6 @@
       integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU"
       crossorigin="anonymous"
     ></script>
-    <script type="module" src="../assets/js/portal.js?v=20260814-15"></script>
+    <script type="module" src="../assets/js/portal.js?v=20260819-01"></script>
   </body>
 </html>
