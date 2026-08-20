@@ -6,7 +6,7 @@ import {
   genderFor,
   measuredPreviewPixelHeights,
   visibleGeneration,
-} from "./fast-pedigree-core.js?v=20260819-2";
+} from "./fast-pedigree-core.js?v=20260820-1";
 
 const esc = (value) =>
   String(value ?? "")

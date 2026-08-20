@@ -1,15 +1,16 @@
 import { requireActiveSession } from "./auth-guard.js";
 import { supabase } from "./supabase-client.js";
-import { createPedigree, genderFor, genderSymbolForStorage, intermediateMissingIndexes, normalizeGender, parseRing, pedigreePersistencePlan } from "./fast-pedigree-core.js?v=20260819-2";
+import { createPedigree, formatPigeonRing, genderFor, genderSymbolForStorage, intermediateMissingIndexes, normalizeGender, parseRing, pedigreePersistencePlan, pigeonRingParts } from "./fast-pedigree-core.js?v=20260820-1";
 
-const PF = "id,ring,ring_number,ring_year,ring_suffix,country,fancier,gender,name_pigeon,color,father_id,mother_id,profile_id,updated_at";
+const PF = "id,ring,ring_number,ring_year,ring_suffix,country,fancier,gender,name_pigeon,color,father_id,mother_id,core_id_loose,profile_id,updated_at";
 const LF = "id,pigeon_id,loft_id,is_owner,is_creator,is_deleted,custom_name,custom_fancier,custom_color,achievements,frame_color,photo,state,updated_at";
 const iso = () => new Date().toISOString(); const uuid = () => crypto.randomUUID();
 const norm = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim();
 
 function toNode(pigeon, membership, index, rootGender, userId) {
-  return { index, id: pigeon.id, loftPigeonId: membership?.id || null, ring: pigeon.ring || "", ring_number: pigeon.ring_number || "", ring_year: pigeon.ring_year,
-    ring_suffix: pigeon.ring_suffix || "", country: pigeon.country || "", gender: index === 1 ? normalizeGender(pigeon.gender || rootGender) : genderFor(index, rootGender),
+  const parts = pigeonRingParts(pigeon);
+  return { index, id: pigeon.id, loftPigeonId: membership?.id || null, ring: parts?.ring || formatPigeonRing(pigeon), ring_number: parts?.ring_number ?? pigeon.ring_number ?? "", ring_year: parts?.ring_year ?? pigeon.ring_year,
+    ring_suffix: parts?.ring_suffix ?? pigeon.ring_suffix ?? "", country: parts?.country ?? pigeon.country ?? "", gender: index === 1 ? normalizeGender(pigeon.gender || rootGender) : genderFor(index, rootGender),
     name: membership?.custom_name || pigeon.name_pigeon || "", fancier: membership?.custom_fancier || pigeon.fancier || "", color: membership?.custom_color || pigeon.color || "",
     details: membership?.achievements || "", frameColor: membership?.frame_color || "#fff", photo: membership?.photo || "", isOwner: membership?.is_owner ?? index === 1,
     isCreator: membership?.is_creator ?? pigeon.profile_id === userId, originalState: membership?.state || null,
@@ -34,7 +35,10 @@ export class FastPedigreeSupabase {
     ]);
     for (const result of [loft, settings, pigeons]) if (result.error) throw result.error;
     if (!loft.data) throw new Error(this.lang === "en" ? "No loft is linked to this account." : "Aucun loft n’est associé à ce compte.");
-    this.loft = loft.data; this.settings = settings.data || null; this.pigeons = pigeons.data || [];
+    this.loft = loft.data; this.settings = settings.data || null; this.pigeons = (pigeons.data || []).map((pigeon) => {
+      const parts = pigeonRingParts(pigeon);
+      return parts ? { ...pigeon, ...parts } : pigeon;
+    });
     const memberships = await supabase.from("loft_pigeon").select(LF).eq("loft_id", this.loft.id).eq("is_deleted", false).limit(3000);
     if (memberships.error) throw memberships.error; this.memberships = memberships.data || []; this.membershipByPigeon = new Map(this.memberships.map((row) => [row.pigeon_id, row]));
     return { profile: this.profile, loft: this.loft, settings: this.settings, pigeons: this.pigeons.map((p) => ({ ...p, membership: this.membershipByPigeon.get(p.id) || null })) };
@@ -64,14 +68,33 @@ export class FastPedigreeSupabase {
     let query = supabase.from("pigeon").select(PF).eq("profile_id", this.profile.id).eq("core_id_loose", parts.core_id_loose);
     if (gender === "M") query = query.in("gender", ["M", "♂"]);
     if (gender === "F") query = query.in("gender", ["F", "♀"]);
-    const result = await query.order("updated_at", { ascending: false }).limit(10);
-    if (result.error) throw result.error; return (result.data || []).filter((p) => p.id !== node.id).map((p) => ({ ...p, membership: this.membershipByPigeon.get(p.id) }));
+    let result = await query.order("updated_at", { ascending: false }).limit(10);
+    if (result.error) throw result.error;
+
+    // Compatibility with rows created by the former web order
+    // (suffix-number-year) before the Flutter-compatible correction.
+    if (!(result.data || []).length && parts.ring_suffix) {
+      const shortYear = String(parts.ring_year).slice(-2);
+      const legacyRing = `${parts.country ? `${parts.country} ` : ""}${parts.ring_suffix}-${parts.ring_number}-${shortYear}`;
+      let fallback = supabase.from("pigeon").select(PF).eq("profile_id", this.profile.id).in("ring", [parts.ring, legacyRing]);
+      if (gender === "M") fallback = fallback.in("gender", ["M", "♂"]);
+      if (gender === "F") fallback = fallback.in("gender", ["F", "♀"]);
+      result = await fallback.order("updated_at", { ascending: false }).limit(10);
+      if (result.error) throw result.error;
+    }
+
+    return (result.data || [])
+      .filter((pigeon) => pigeon.id !== node.id)
+      .map((pigeon) => {
+        const normalized = pigeonRingParts(pigeon);
+        return { ...pigeon, ...(normalized || {}), membership: this.membershipByPigeon.get(pigeon.id) };
+      });
   }
   async findExistingPigeon(node) {
     const choices = await this.duplicates(node);
     if (!choices.length) return null;
-    const normalizedRing = parseRing(node.ring)?.ring;
-    return choices.find((candidate) => parseRing(candidate.ring)?.ring === normalizedRing) || choices[0];
+    const identity = parseRing(node.ring)?.core_id_loose;
+    return choices.find((candidate) => pigeonRingParts(candidate)?.core_id_loose === identity) || choices[0];
   }
   async savePedigree(nodes, resolveDuplicate) {
     const missing = intermediateMissingIndexes(nodes);
@@ -90,6 +113,7 @@ export class FastPedigreeSupabase {
         if (!node.ring) continue;
         const parts = parseRing(node.ring);
         if (!parts) throw new Error(`${this.lang === "en" ? "Invalid ring" : "Bague invalide"}: ${node.ring}`);
+        Object.assign(node, parts, { invalid: false });
 
         if (!node.id) {
           const choices = await this.duplicates(node);
@@ -128,6 +152,7 @@ export class FastPedigreeSupabase {
             ring_year: parts.ring_year,
             ring_suffix: parts.ring_suffix || "",
             country: parts.country || "",
+            core_id_loose: parts.core_id_loose,
             gender: genderSymbolForStorage(genderFor(index, working[1].gender)),
             name_pigeon: node.name || null,
             fancier: node.fancier || null,

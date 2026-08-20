@@ -158,15 +158,49 @@ export function formatDateDmy(value = new Date()) {
 }
 
 export const normalizeRing = (value) => String(value || "").toUpperCase().trim().replace(/[—–_]/g, "-").replace(/\s+/g, " ");
+
+const COUNTRY_PREFIX_PATTERN = "([A-Z](?:[^0-9\\r\\n]{0,6}[A-Z])?)?";
+
+export function formatRingParts(parts = {}) {
+  const country = normalizeRing(parts.country || "");
+  const suffix = String(parts.ring_suffix ?? "").trim();
+  const number = String(parts.ring_number ?? "").trim();
+  const yearDigits = String(parts.ring_year ?? "").replace(/\D/g, "");
+  if (!number || !yearDigits) return "";
+  const shortYear = yearDigits.slice(-2).padStart(2, "0");
+  const numericPart = suffix
+    ? `${suffix}-${shortYear}-${number}`
+    : `${number}-${shortYear}`;
+  return `${country ? `${country} ` : ""}${numericPart}`;
+}
+
+function parsedRingResult({ country = "", number, yearText, suffix = "", extra = "", now }) {
+  const short = Number(String(yearText).slice(-2));
+  const threshold = Number(String(now.getFullYear()).slice(-2)) + 1;
+  const ringYear = String(yearText).length === 4 ? Number(yearText) : (short > threshold ? 1900 : 2000) + short;
+  const ring = formatRingParts({ country, ring_number: number, ring_year: ringYear, ring_suffix: suffix });
+  return {
+    ring,
+    country,
+    ring_number: number,
+    ring_year: ringYear,
+    ring_suffix: suffix,
+    extra: String(extra || "").trim(),
+    core_id_loose: `${ringYear}-${String(number).padStart(7, "0")}${suffix ? `-${suffix}` : ""}`,
+  };
+}
+
 export function parseRing(value, now = new Date()) {
   const raw = normalizeRing(value);
   if (!raw) return null;
-  const prefix = "([A-Z](?:[^0-9\\r\\n]{0,6}[A-Z])?)?";
   const patterns = [
-    [4, new RegExp(`^${prefix}\\s*[-]?[/]?\\s*(\\d{4})[-/\\s]+(\\d{3,7})(?:\\s+)?(.*)?$`, "i")],
-    [2, new RegExp(`^${prefix}\\s*[-]?[/]?\\s*(\\d{3,7})[-/\\s]+(\\d{2})[-/]+(\\d{3,7})(?:\\s+)?(.*)?$`, "i")],
-    [1, new RegExp(`^${prefix}\\s*[-]?[/]?\\s*(\\d{3,7})[-/\\s]+(\\d{2})(?:\\s+)?(.*)?$`, "i")],
-    [3, new RegExp(`^${prefix}\\s*[-]?[/]?\\s*(\\d{2})[-/\\s]+(\\d{3,7})(?:\\s+)?(.*)?$`, "i")],
+    // Flutter: DV 8210-17-0325 -> suffix-year-number.
+    [2, new RegExp(`^${COUNTRY_PREFIX_PATTERN}\\s*[-]?[/]?\\s*(\\d{3,7})[-/\\s]+(\\d{2})[-/]+(\\d{3,7})(?:\\s+)?(.*)?$`, "i")],
+    // Recover drafts/rows produced by the former web order: suffix-number-year.
+    [5, new RegExp(`^${COUNTRY_PREFIX_PATTERN}\\s*[-]?[/]?\\s*(\\d{3,7})[-/\\s]+(\\d{3,7})[-/]+(\\d{2})(?:\\s+)?(.*)?$`, "i")],
+    [4, new RegExp(`^${COUNTRY_PREFIX_PATTERN}\\s*[-]?[/]?\\s*(\\d{4})[-/\\s]+(\\d{3,7})(?:\\s+)?(.*)?$`, "i")],
+    [1, new RegExp(`^${COUNTRY_PREFIX_PATTERN}\\s*[-]?[/]?\\s*(\\d{3,7})[-/\\s]+(\\d{2})(?:\\s+)?(.*)?$`, "i")],
+    [3, new RegExp(`^${COUNTRY_PREFIX_PATTERN}\\s*[-]?[/]?\\s*(\\d{2})[-/\\s]+(\\d{3,7})(?:\\s+)?(.*)?$`, "i")],
   ];
   for (const [kind, pattern] of patterns) {
     const match = raw.match(pattern);
@@ -175,16 +209,23 @@ export function parseRing(value, now = new Date()) {
     let number, yearText, suffix = "", extra = "";
     if (kind === 4) { yearText = match[2]; number = match[3]; extra = match[4] || ""; }
     else if (kind === 2) { suffix = match[2]; yearText = match[3]; number = match[4]; extra = match[5] || ""; }
+    else if (kind === 5) { suffix = match[2]; number = match[3]; yearText = match[4]; extra = match[5] || ""; }
     else if (kind === 1) { number = match[2]; yearText = match[3]; extra = match[4] || ""; }
     else { yearText = match[2]; number = match[3]; extra = match[4] || ""; }
-    const short = Number(yearText.slice(-2));
-    const threshold = Number(String(now.getFullYear()).slice(-2)) + 1;
-    const ringYear = yearText.length === 4 ? Number(yearText) : (short > threshold ? 1900 : 2000) + short;
-    const ring = `${country ? `${country} ` : ""}${suffix ? `${suffix}-` : ""}${number}-${String(ringYear).slice(-2)}`;
-    return { ring, country, ring_number: number, ring_year: ringYear, ring_suffix: suffix, extra: extra.trim(),
-      core_id_loose: `${ringYear}-${String(number).padStart(7, "0")}${suffix ? `-${suffix}` : ""}` };
+    return parsedRingResult({ country, number, yearText, suffix, extra, now });
   }
   return null;
+}
+
+export function pigeonRingParts(pigeon, now = new Date()) {
+  const fromRing = parseRing(pigeon?.ring, now);
+  if (fromRing) return fromRing;
+  const structured = formatRingParts(pigeon);
+  return structured ? parseRing(structured, now) : null;
+}
+
+export function formatPigeonRing(pigeon, fallback = "") {
+  return pigeonRingParts(pigeon)?.ring || normalizeRing(pigeon?.ring) || fallback;
 }
 
 const performanceResult = (line) => String(line || "").match(/^(\d{1,4})\s*[\/|]\s*(\d{1,6})$/);
@@ -245,16 +286,71 @@ export function reconstructOcrLines(text) {
 }
 
 export function parsePigeonText(text, index, rootGender = "?") {
-  let lines = reconstructOcrLines(text);
+  const lines = reconstructOcrLines(text);
   const result = emptyNode(index, rootGender);
   if (!lines.length) return result;
-  if (lines.length > 1 && /^[A-Z](?:[^0-9\r\n]{0,6}[A-Z])?$/i.test(lines[0]) && parseRing(`${lines[0]} ${lines[1]}`)?.country) {
-    lines = [`${lines[0]} ${lines[1]}`, ...lines.slice(2)];
+
+  const parseOcrRing = (line) => {
+    const normalized = normalizeRing(line).replaceAll("|", "1");
+    const digitCorrected = normalized.replaceAll("O", "0").replaceAll("Q", "0");
+    return parseRing(digitCorrected) || parseRing(normalized);
+  };
+  const countryPrefixOnly = (line) => {
+    let normalized = normalizeRing(line);
+    if (/\d/.test(normalized)) return null;
+    normalized = normalized.replace(/^[^A-Z]+/, "").replace(/[^A-Z]+$/, "");
+    if (!normalized || !new RegExp(`^${COUNTRY_PREFIX_PATTERN}$`, "i").test(normalized)) return null;
+    if (/^[A-Z]+$/.test(normalized) && normalized.length > 4) return null;
+    return normalized;
+  };
+
+  let ringStartIndex = -1;
+  let ringEndIndex = -1;
+  let parts = null;
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const current = parseOcrRing(lines[lineIndex]);
+    if (current?.country) {
+      ringStartIndex = lineIndex;
+      ringEndIndex = lineIndex;
+      parts = current;
+      break;
+    }
+
+    const prefix = countryPrefixOnly(lines[lineIndex]);
+    if (prefix && lineIndex + 1 < lines.length) {
+      const merged = parseOcrRing(`${prefix} ${lines[lineIndex + 1]}`);
+      if (merged?.country) {
+        ringStartIndex = lineIndex;
+        ringEndIndex = lineIndex + 1;
+        parts = merged;
+        break;
+      }
+    }
+
+    if (current && lineIndex > 0) {
+      const previousPrefix = countryPrefixOnly(lines[lineIndex - 1]);
+      if (previousPrefix) {
+        const merged = parseOcrRing(`${previousPrefix} ${lines[lineIndex]}`);
+        if (merged?.country) {
+          ringStartIndex = lineIndex - 1;
+          ringEndIndex = lineIndex;
+          parts = merged;
+          break;
+        }
+      }
+    }
+
+    if (current) {
+      ringStartIndex = lineIndex;
+      ringEndIndex = lineIndex;
+      parts = current;
+      break;
+    }
   }
-  const ringIndex = lines.findIndex((line) => parseRing(line));
-  if (ringIndex < 0) return result;
-  const parts = parseRing(lines[ringIndex]);
-  const others = lines.filter((_, i) => i !== ringIndex);
+
+  if (ringStartIndex < 0 || !parts) return result;
+  const others = lines.slice(ringEndIndex + 1);
   return { ...result, ...parts, gender: genderFor(index, rootGender), name: others[0] || "",
     fancier: others[1] || "", color: others[2] || "", details: others.slice(3).join("\n"), dirty: true };
 }
@@ -268,7 +364,11 @@ export function restoreTemporaryState(value, rootGender = "?") {
   const nodes = createPedigree(rootGender);
   for (const [rawIndex, partial] of Object.entries(value || {})) {
     const index = Number(rawIndex);
-    if (index >= 1 && index <= 31) nodes[index] = { ...nodes[index], ...partial, index };
+    if (index >= 1 && index <= 31) {
+      const restored = { ...nodes[index], ...partial, index };
+      const parts = pigeonRingParts(restored);
+      nodes[index] = parts ? { ...restored, ...parts, invalid: false } : restored;
+    }
   }
   return nodes;
 }

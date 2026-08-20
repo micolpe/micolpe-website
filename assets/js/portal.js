@@ -84,18 +84,38 @@ function formatSubscription(profile) {
 }
 
 function formatRing(pigeon) {
-  if (String(pigeon?.ring || "").trim()) return String(pigeon.ring).trim();
+  const raw = String(pigeon?.ring || "")
+    .toUpperCase()
+    .trim()
+    .replace(/[—–_]/g, "-")
+    .replace(/\s+/g, " ");
+  const country = String(pigeon?.country || "").toUpperCase().trim();
+  const suffix = String(pigeon?.ring_suffix ?? "").trim();
+  const number = String(pigeon?.ring_number ?? "").trim();
+  const yearDigits = String(pigeon?.ring_year ?? "").replace(/\D/g, "");
 
-  return (
-    [
-      pigeon?.country,
-      pigeon?.ring_year,
-      pigeon?.ring_number,
-      pigeon?.ring_suffix,
-    ]
-      .filter((value) => value !== null && value !== undefined && value !== "")
-      .join("-") || tr("Bague non renseignée", "Ring not provided")
+  if (suffix && number && yearDigits) {
+    const shortYear = yearDigits.slice(-2).padStart(2, "0");
+    return `${country ? `${country} ` : ""}${suffix}-${shortYear}-${number}`;
+  }
+
+  // Récupère aussi l'ancien ordre Web suffix-number-year sans dépendre
+  // du module Fast Pedigree pendant le démarrage du portail.
+  const prefix = "([A-Z](?:[^0-9\\r\\n]{0,6}[A-Z])?)?";
+  const legacy = raw.match(
+    new RegExp(`^${prefix}\\s*[-/]?\\s*(\\d{3,7})[-/\\s]+(\\d{3,7})[-/]+(\\d{2})$`, "i"),
   );
+  if (legacy) {
+    const legacyCountry = String(legacy[1] || "").trim();
+    return `${legacyCountry ? `${legacyCountry} ` : ""}${legacy[2]}-${legacy[4]}-${legacy[3]}`;
+  }
+
+  if (raw) return raw;
+  if (number && yearDigits) {
+    const shortYear = yearDigits.slice(-2).padStart(2, "0");
+    return `${country ? `${country} ` : ""}${number}-${shortYear}`;
+  }
+  return tr("Bague non renseignée", "Ring not provided");
 }
 
 function formatGender(value) {
@@ -1362,7 +1382,8 @@ async function initializePortal() {
       accessMode: authState.accessMode,
     });
     await initializePaymentExperience();
-  } catch {
+  } catch (error) {
+    console.error("Micolpe portal initialization failed", error);
     showPortalError(
       tr(
         "Vos données ne peuvent pas être chargées pour le moment. Vérifiez votre connexion puis réessayez.",
