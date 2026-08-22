@@ -750,7 +750,7 @@ async function init() {
 
   if (!authenticated) return;
   try {
-    const { FastPedigreeSupabase } = await import("./fast-pedigree-supabase.js?v=20260820-1");
+    const { FastPedigreeSupabase } = await import("./fast-pedigree-supabase.js?v=20260822-parents-1");
     state.adapter = new FastPedigreeSupabase(lang);
     const data = await state.adapter.initialize();
     if (!data) return;

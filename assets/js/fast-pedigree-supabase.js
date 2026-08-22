@@ -157,12 +157,16 @@ export class FastPedigreeSupabase {
             name_pigeon: node.name || null,
             fancier: node.fancier || null,
             color: node.color || null,
-            father_id: father,
-            mother_id: mother,
             profile_id: this.profile.id,
             updated_at: now,
           };
-          const result = await supabase.from("pigeon").upsert(payload, { onConflict: "id" }).select(PF).single();
+          if (applyRelations) {
+            payload.father_id = father;
+            payload.mother_id = mother;
+          }
+          const result = isNew
+            ? await supabase.from("pigeon").insert(payload).select(PF).single()
+            : await supabase.from("pigeon").update(payload).eq("id", node.id).select(PF).single();
           if (result.error) throw result.error;
           Object.assign(node, result.data, {
             gender: normalizeGender(result.data.gender || node.gender),
