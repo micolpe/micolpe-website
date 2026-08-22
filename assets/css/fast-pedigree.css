@@ -109,11 +109,11 @@
 
 /* Give pedigree columns more width and scale text with the visible depth. */
 .fp-paper-body{padding:1.2% .6%}
-.fp-paper{--fp-case-ring-size:10px;--fp-case-name-size:9px;--fp-case-meta-size:8px;--fp-case-details-size:7px;--fp-case-gender-size:13px}
-.fp-paper[data-level="1"]{--fp-case-ring-size:14px;--fp-case-name-size:12px;--fp-case-meta-size:11px;--fp-case-details-size:9px;--fp-case-gender-size:17px}
-.fp-paper[data-level="2"]{--fp-case-ring-size:12px;--fp-case-name-size:11px;--fp-case-meta-size:10px;--fp-case-details-size:8.5px;--fp-case-gender-size:15px}
-.fp-paper[data-level="3"]{--fp-case-ring-size:11px;--fp-case-name-size:10px;--fp-case-meta-size:9px;--fp-case-details-size:8px;--fp-case-gender-size:14px}
-.fp-paper[data-level="5"]{--fp-case-ring-size:8px;--fp-case-name-size:7px;--fp-case-meta-size:6px;--fp-case-details-size:5.5px;--fp-case-gender-size:10px}
+.fp-paper{--fp-case-ring-size:11px;--fp-case-name-size:10px;--fp-case-meta-size:8.7px;--fp-case-details-size:7.5px;--fp-case-gender-size:14px}
+.fp-paper[data-level="1"]{--fp-case-ring-size:15px;--fp-case-name-size:13px;--fp-case-meta-size:12px;--fp-case-details-size:10px;--fp-case-gender-size:18px}
+.fp-paper[data-level="2"]{--fp-case-ring-size:13px;--fp-case-name-size:12px;--fp-case-meta-size:10.8px;--fp-case-details-size:9.2px;--fp-case-gender-size:16px}
+.fp-paper[data-level="3"]{--fp-case-ring-size:12px;--fp-case-name-size:11px;--fp-case-meta-size:9.8px;--fp-case-details-size:8.6px;--fp-case-gender-size:15px}
+.fp-paper[data-level="5"]{--fp-case-ring-size:8.7px;--fp-case-name-size:7.6px;--fp-case-meta-size:6.5px;--fp-case-details-size:5.9px;--fp-case-gender-size:11px}
 .fp-paper-gender{font-size:var(--fp-case-gender-size)}
 .fp-paper-ring{font-size:var(--fp-case-ring-size)}
 .fp-paper-name{font-size:var(--fp-case-name-size)}
